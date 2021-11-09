@@ -173,6 +173,5 @@ devSSD1331init(void)
 	writeCommand(0xFF);
 	writeCommand(0x00);
 
-
 	return 0;
 }
