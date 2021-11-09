@@ -8,6 +8,8 @@
 	mkdir -p work/demos/Warp/src/btstack
 
 	cp -r ../../tools/sdk/ksdk1.1.0/*				work
+	cp ../../src/boot/ksdk1.1.0/devSSD1331.c			work/demos/Warp/src/
+	cp ../../src/boot/ksdk1.1.0/devSSD1331.h			work/demos/Warp/src/
 	cp ../../src/boot/ksdk1.1.0/SEGGER*				work/demos/Warp/src/
 	cp ../../src/boot/ksdk1.1.0/warp-kl03-ksdk1.1-boot.c		work/demos/Warp/src/
 	cp ../../src/boot/ksdk1.1.0/warp-kl03-ksdk1.1-powermodes.c	work/demos/Warp/src/
@@ -32,8 +34,6 @@
 	cp ../../src/boot/ksdk1.1.0/devRV8803C7.*			work/demos/Warp/src/
 	cp ../../src/boot/ksdk1.1.0/devISL23415.*			work/demos/Warp/src/
 	cp ../../src/boot/ksdk1.1.0/devMAX11300.*			work/demos/Warp/src/
-	cp ../../src/boot/ksdk1.1.0/devSSD1331.c			work/demos/Warp/src/
-	cp ../../src/boot/ksdk1.1.0/devSSD1331.h			work/demos/Warp/src/
 	cp ../../src/boot/ksdk1.1.0/CMakeLists.txt			work/demos/Warp/armgcc/Warp/
 	cp ../../src/boot/ksdk1.1.0/startup_MKL03Z4.S			work/platform/startup/MKL03Z4/gcc/startup_MKL03Z4.S
 	cp ../../src/boot/ksdk1.1.0/gpio_pins.c				work/boards/Warp
