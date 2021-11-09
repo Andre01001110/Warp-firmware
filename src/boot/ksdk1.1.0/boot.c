@@ -93,6 +93,11 @@
 	volatile WarpSPIDeviceState			deviceICE40State;
 #endif
 
+#if (WARP_BUILD_ENABLE_DEVICE40)
+	#include "devSSD1331.h"
+	volatile WarpSPIDeviceState			deviceSSD1331State;
+#endif
+
 #if (WARP_BUILD_ENABLE_DEVBMX055)
 	#include "devBMX055.h"
 	volatile WarpI2CDeviceState			deviceBMX055accelState;
