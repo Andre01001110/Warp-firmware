@@ -55,6 +55,8 @@
 #include "SEGGER_RTT.h"
 #include "warp.h"
 
+#include "devSSD1331.h"
+
 
 #define WARP_FRDMKL03
 
