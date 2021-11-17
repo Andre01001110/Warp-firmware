@@ -98,6 +98,11 @@
 	volatile WarpSPIDeviceState			deviceSSD1331State;
 #endif
 
+#if (WARP_BUILD_ENABLE_DEVINA219)
+	#include "devINA219.h"
+	volatile WarpSPIDeviceState			deviceINA219State;
+#endif
+
 #if (WARP_BUILD_ENABLE_DEVBMX055)
 	#include "devBMX055.h"
 	volatile WarpI2CDeviceState			deviceBMX055accelState;
@@ -2069,6 +2074,9 @@ main(void)
 		#endif
 
 		warpPrint("\r- 'x': disable SWD and spin for 10 secs.\n");
+		#if (WARP_BUILD_ENABLE_DEVSSD1331)
+			warpPrint("\r- 'y': OLED Menu\n");
+		#endif
 		warpPrint("\r- 'z': perpetually dump all sensor data.\n");
 
 		warpPrint("\rEnter selection> ");
@@ -2139,6 +2147,12 @@ main(void)
 					warpPrint("\r\t- 'b' BME680			(0xAA--0xF8): 1.6V -- 3.6V\n");
 				#else
 					warpPrint("\r\t- 'b' BME680			(0xAA--0xF8): 1.6V -- 3.6V (compiled out) \n");
+				#endif
+				
+				#if (WARP_BUILD_ENABLE_DEVINA219)
+					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V\n");
+				#else
+					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V (compiled out) \n");
 				#endif
 
 				#if (WARP_BUILD_ENABLE_DEVTCS34725)
@@ -2697,7 +2711,65 @@ main(void)
 
 				break;
 			}
+#if (WARP_BUILD_ENABLE_DEVSSD1331)
+/*
+            case 'y':
+			{
+				warpPrint("\r\n\tInitialising OLED...\n");
+				devSSD1331init();
+				warpPrint("\r\tDone.\n\n");
 
+				break;
+			}
+			*/
+
+			case 'y':
+			{
+			    warpPrint("\r\tSelect:\n");
+				warpPrint("\r\t- '1' Turn On\n");
+				warpPrint("\r\t- '0' Turn Off\n");
+				warpPrint("\r\t- 'y' Initialise OLED\n");
+				warpPrint("\r\tEnter selection> ");
+				key = warpWaitKey();
+				
+				switch(key)
+				{
+					
+					case '1':
+					{
+						warpPrint("\r\n\tTurning On OLED...\n");
+				        devSSD1331on();
+				        warpPrint("\r\tDone.\n\n");
+				        break;
+					}
+
+					case '0':
+					{
+						warpPrint("\r\n\tTurning off OLED...\n");
+				        devSSD1331off();
+				        warpPrint("\r\tDone.\n\n");
+				        break;
+					}
+					
+					case 'y':
+					{
+						warpPrint("\r\n\tInitialising OLED...\n");
+				        devSSD1331init();
+				        warpPrint("\r\tDone.\n\n");
+						break;
+					}
+
+					default:
+					{
+						warpPrint("\r\tInvalid selection '%c' !\n", key);
+					}
+				}
+
+				break;
+			}
+			
+
+#endif
 			/*
 			 *	Dump all the sensor data in one go
 			 */
