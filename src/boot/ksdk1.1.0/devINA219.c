@@ -1,0 +1,6 @@
+enum
+{
+	kINA219PinSDA		= GPIO_MAKE_PIN(HW_GPIOB, 4),
+	kINA219PinSCL		= GPIO_MAKE_PIN(HW_GPIOB, 3),
+};
+
