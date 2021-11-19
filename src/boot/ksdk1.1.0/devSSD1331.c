@@ -181,7 +181,7 @@ devSSD1331init(void)
 }
 
 int
-devSSD1331off(void)
+devSSD1331clear(void)
 {
 	writeCommand(kSSD1331CommandCLEAR);
 	writeCommand(0x00);
@@ -193,7 +193,7 @@ devSSD1331off(void)
 }
 
 int
-devSSD1331on(void)
+devSSD1331red(void)
 {
 	writeCommand(0x22);
 	
@@ -209,6 +209,50 @@ devSSD1331on(void)
 	
 	writeCommand(0xFF);
 	writeCommand(0x00);
+	writeCommand(0x00);
+
+	return 0;
+}
+
+int
+devSSD1331blue(void)
+{
+	writeCommand(0x22);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	
+	writeCommand(0x5F);
+	writeCommand(0x3F);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	writeCommand(0xFF);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	writeCommand(0xFF);
+
+	return 0;
+}
+
+int
+devSSD1331green(void)
+{
+	writeCommand(0x22);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	
+	writeCommand(0x5F);
+	writeCommand(0x3F);
+	
+	writeCommand(0x00);
+	writeCommand(0xFF);
+	writeCommand(0x00);
+	
+	writeCommand(0x00);
+	writeCommand(0xFF);
 	writeCommand(0x00);
 
 	return 0;

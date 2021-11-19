@@ -229,7 +229,7 @@ static void						activateAllLowPowerSensorModes(bool verbose);
 static void						powerupAllSensors(void);
 static uint8_t						readHexByte(void);
 static int						read4digits(void);
-static void						printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelayBetweenEachRun, bool loopForever);
+static void						printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelayBetweenEachRun, bool loopForever, int loopLength);
 
 /*
  *	TODO: change the following to take byte arrays
@@ -1901,7 +1901,7 @@ main(void)
 		}
 
 		warpScaleSupplyVoltage(3300);
-		printAllSensors(true /* printHeadersAndCalibration */, true /* hexModeFlag */, 0 /* menuDelayBetweenEachRun */, true /* loopForever */);
+		printAllSensors(true /* printHeadersAndCalibration */, true /* hexModeFlag */, 0 /* menuDelayBetweenEachRun */, true /* loopForever */, 1000);
 		/*
 		 *	Notreached
 		 */
@@ -2006,7 +2006,7 @@ main(void)
 			blinkLED(kGlauxPinLED);
 			for (int i = 0; i < kGlauxSensorRepetitionsPerSleepIteration; i++)
 			{
-				printAllSensors(true /* printHeadersAndCalibration */, true /* hexModeFlag */, 0 /* menuDelayBetweenEachRun */, true /* loopForever */);
+				printAllSensors(true /* printHeadersAndCalibration */, true /* hexModeFlag */, 0 /* menuDelayBetweenEachRun */, true /* loopForever */, 1000);
 			}
 
 			warpPrint("About to configureSensorBME680() for sleep...\n");
@@ -2080,14 +2080,15 @@ main(void)
 		warpPrint("\r- 'x': disable SWD and spin for 10 secs.\n");
 		
 		#if (WARP_BUILD_ENABLE_DEVSSD1331)
-			warpPrint("\r- 'y': OLED Menu\n");
+		    warpPrint("\r- 'y': OLED Menu.\n");
 		#endif
-		
+	    
 		warpPrint("\r- 'z': perpetually dump all sensor data.\n");
 
-		warpPrint("\rEnter selection> ");
+		warpPrint("\rEnter selection>");
 		key = warpWaitKey();
-
+		warpPrint("\r\n");
+		
 		switch (key)
 		{
 			/*
@@ -2096,12 +2097,6 @@ main(void)
 			case 'a':
 			{
 				warpPrint("\r\tSelect:\n");
-				
-				#if (WARP_BUILD_ENABLE_DEVINA219)
-					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V\n");
-				#else
-					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V (compiled out) \n");
-				#endif
 
 				#if (WARP_BUILD_ENABLE_DEVADXL362)
 					warpPrint("\r\t- '1' ADXL362			(0x00--0x2D): 1.6V -- 3.5V\n");
@@ -2115,7 +2110,7 @@ main(void)
 					warpPrint("\r\t- '4' BMX055mag			(0x40--0x52): 2.4V -- 3.6V\n");
 				#else
 					warpPrint("\r\t- '2' BMX055accel 		(0x00--0x3F): 2.4V -- 3.6V (compiled out) \n");
-					warpPrint("\r\t- '3' BMX055gyro			(0x00--0x3F): 2.4V -- 3.6V (compiled out) \n");
+					warpPrint("\r\t- '3' BMX055gyro		(0x00--0x3F): 2.4V -- 3.6V (compiled out) \n");
 					warpPrint("\r\t- '4' BMX055mag			(0x40--0x52): 2.4V -- 3.6V (compiled out) \n");
 				#endif
 
@@ -2160,6 +2155,12 @@ main(void)
 				#else
 					warpPrint("\r\t- 'b' BME680			(0xAA--0xF8): 1.6V -- 3.6V (compiled out) \n");
 				#endif
+				
+				#if (WARP_BUILD_ENABLE_DEVINA219)
+					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V\n");
+				#else
+					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V (compiled out) \n");
+				#endif
 
 				#if (WARP_BUILD_ENABLE_DEVTCS34725)
 					warpPrint("\r\t- 'd' TCS34725			(0x00--0x1D): 2.7V -- 3.3V\n");
@@ -2180,9 +2181,9 @@ main(void)
 				#endif
 
 				#if (WARP_BUILD_ENABLE_DEVAMG8834)
-					warpPrint("\r\t- 'h' AMG8834			(0x00--?): 3.3V -- 3.3V\n");
+					warpPrint("\r\t- 'h' AMG8834			(0x00--?):    3.3V -- 3.3V\n");
 				#else
-					warpPrint("\r\t- 'h' AMG8834			(0x00--?): 3.3V -- 3.3V (compiled out) \n");
+					warpPrint("\r\t- 'h' AMG8834			(0x00--?):    3.3V -- 3.3V (compiled out) \n");
 				#endif
 
 				#if (WARP_BUILD_ENABLE_DEVAS7262)
@@ -2197,8 +2198,9 @@ main(void)
 					warpPrint("\r\t- 'k' AS7263			(0x00--0x2B): 2.7V -- 3.6V (compiled out) \n");
 				#endif
 
-				warpPrint("\r\tEnter selection> ");
+				warpPrint("\r\tEnter selection>");
 				key = warpWaitKey();
+				warpPrint("\r\n");
 
 				switch(key)
 				{
@@ -2726,41 +2728,49 @@ main(void)
 				break;
 			}
 #if (WARP_BUILD_ENABLE_DEVSSD1331)
-/*
-            case 'y':
-			{
-				warpPrint("\r\n\tInitialising OLED...\n");
-				devSSD1331init();
-				warpPrint("\r\tDone.\n\n");
-
-				break;
-			}
-			*/
 
 			case 'y':
 			{
 			    warpPrint("\r\tSelect:\n");
-				warpPrint("\r\t- '1' Turn On\n");
-				warpPrint("\r\t- '0' Turn Off\n");
+				warpPrint("\r\t- '0' Clear Screen\n");
+				warpPrint("\r\t- 'r' Red Rectangle\n");
+				warpPrint("\r\t- 'g' Green Rectangle\n");
+				warpPrint("\r\t- 'b' Blue Rectangle\n");
 				warpPrint("\r\t- 'y' Initialise OLED\n");
 				warpPrint("\r\tEnter selection> ");
 				key = warpWaitKey();
 				
 				switch(key)
 				{
-					
-					case '1':
-					{
-						warpPrint("\r\n\tTurning On OLED...\n");
-				        devSSD1331on();
-				        warpPrint("\r\tDone.\n\n");
-				        break;
-					}
 
 					case '0':
 					{
-						warpPrint("\r\n\tTurning off OLED...\n");
-				        devSSD1331off();
+						warpPrint("\r\n\tClearing OLED...\n");
+				        devSSD1331clear();
+				        warpPrint("\r\tDone.\n\n");
+				        break;
+					}
+					
+					case 'r':
+					{
+						warpPrint("\r\n\tDrawing Red Rectangle...\n");
+				        devSSD1331red();
+				        warpPrint("\r\tDone.\n\n");
+				        break;
+					}
+					
+					case 'g':
+					{
+						warpPrint("\r\n\tDrawing Green Rectangle...\n");
+				        devSSD1331green();
+				        warpPrint("\r\tDone.\n\n");
+				        break;
+					}
+					
+					case 'b':
+					{
+						warpPrint("\r\n\tDrawing Blue Rectangle...\n");
+				        devSSD1331blue();
 				        warpPrint("\r\tDone.\n\n");
 				        break;
 					}
@@ -2794,11 +2804,14 @@ main(void)
 				warpPrint("\r\n\tHex or converted mode? ('h' or 'c')> ");
 				key = warpWaitKey();
 				hexModeFlag = (key == 'h' ? 1 : 0);
+				
+				warpPrint("\r\n\tNumber of readings? (e.g., '1234')> ");
+				uint16_t	loopLength = read4digits();
 
 				warpPrint("\r\n\tSet the time delay between each run in milliseconds (e.g., '1234')> ");
 				uint16_t	menuDelayBetweenEachRun = read4digits();
 				warpPrint("\r\n\tDelay between read batches set to %d milliseconds.\n\n", menuDelayBetweenEachRun);
-				printAllSensors(true /* printHeadersAndCalibration */, hexModeFlag, menuDelayBetweenEachRun, true /* loopForever */);
+				printAllSensors(true /* printHeadersAndCalibration */, hexModeFlag, menuDelayBetweenEachRun, true /* loopForever */, loopLength);
 
 				/*
 				 *	Not reached (printAllSensors() does not return)
@@ -2869,7 +2882,7 @@ main(void)
 
 
 void
-printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelayBetweenEachRun, bool loopForever)
+printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelayBetweenEachRun, bool loopForever, int loopLength)
 {
 	/*
 	 *	A 32-bit counter gives us > 2 years of before it wraps, even if sampling at 60fps
@@ -3064,6 +3077,13 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 		}
 
 		readingCount++;
+		
+		if (readingCount > loopLength)
+		{
+			loopForever = 0;
+		}
+
+				
 	} while (loopForever);
 }
 
