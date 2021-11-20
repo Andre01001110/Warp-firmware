@@ -82,4 +82,3 @@ load-glaux:
 
 clean:
 	rm -rf build/ksdk1.1/work
-

@@ -15,6 +15,7 @@
 #include "fsl_spi_master_driver.h"
 
 #include "config.h"
+#include "glaux.h"
 #include "warp.h"
 #include "gpio_pins.h"
 #include "devRV8803C7.h"
