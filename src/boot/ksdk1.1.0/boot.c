@@ -56,7 +56,6 @@
 #include "fsl_mcglite_hal.h"
 #include "fsl_port_hal.h"
 #include "fsl_lpuart_driver.h"
-#include "glaux.h"
 #include "warp.h"
 #include "errstrs.h"
 #include "gpio_pins.h"
@@ -1827,7 +1826,7 @@ main(void)
 		    warpPrint("\r- 'y': OLED Menu.\n");
 		#endif
 	    
-		warpPrint("\r- 'z': perpetually dump all sensor data.\n");
+		warpPrint("\r- 'z': dump all sensor data.\n");
 
 		warpPrint("\rEnter selection>");
 		key = warpWaitKey();
