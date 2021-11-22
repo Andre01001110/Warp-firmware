@@ -148,16 +148,6 @@
 	olatile WarpI2CDeviceState			deviceCCS811State;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVAS7262)
-	#include "devAS7262.h"
-	volatile WarpI2CDeviceState			deviceAS7262State;
-#endif
-
-#if (WARP_BUILD_ENABLE_DEVAS7263)
-	#include "devAS7263.h"
-	volatile WarpI2CDeviceState			deviceAS7263State;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVRV8803C7)
 	#include "devRV8803C7.h"
 	volatile WarpI2CDeviceState			deviceRV8803C7State;
@@ -1608,14 +1598,6 @@ main(void)
 		initCCS811(	0x5A	/* i2cAddress */,	&deviceCCS811State,		kWarpDefaultSupplyVoltageMillivoltsCCS811	);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVAS7262)
-		initAS7262(	0x49	/* i2cAddress */,	&deviceAS7262State,		kWarpDefaultSupplyVoltageMillivoltsAS7262	);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVAS7263)
-		initAS7263(	0x49	/* i2cAddress */,	&deviceAS7263State,		kWarpDefaultSupplyVoltageMillivoltsAS7263	);
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVRV8803C7)
 		initRV8803C7(	0x32	/* i2cAddress */,					kWarpDefaultSupplyVoltageMillivoltsRV8803C7	);
 		status = setRTCCountdownRV8803C7(0 /* countdown */, kWarpRV8803ExtTD_1HZ /* frequency */, false /* interupt_enable */);
@@ -1898,18 +1880,6 @@ main(void)
 					warpPrint("\r\t- 'g' CCS811			(0x00--0xFF): 1.8V -- 3.6V (compiled out) \n");
 				#endif
 
-				#if (WARP_BUILD_ENABLE_DEVAS7262)
-					warpPrint("\r\t- 'j' AS7262			(0x00--0x2B): 2.7V -- 3.6V\n");
-				#else
-					warpPrint("\r\t- 'j' AS7262			(0x00--0x2B): 2.7V -- 3.6V (compiled out) \n");
-				#endif
-
-				#if (WARP_BUILD_ENABLE_DEVAS7263)
-					warpPrint("\r\t- 'k' AS7263			(0x00--0x2B): 2.7V -- 3.6V\n");
-				#else
-					warpPrint("\r\t- 'k' AS7263			(0x00--0x2B): 2.7V -- 3.6V (compiled out) \n");
-				#endif
-
 				warpPrint("\r\tEnter selection>");
 				key = warpWaitKey();
 				warpPrint("\r\n");
@@ -2006,22 +1976,6 @@ main(void)
 					{
 						menuTargetSensor = kWarpSensorCCS811;
 						menuI2cDevice = &deviceCCS811State;
-						break;
-					}
-#endif
-#if (WARP_BUILD_ENABLE_DEVAS7262)
-					case 'j':
-					{
-						menuTargetSensor = kWarpSensorAS7262;
-						menuI2cDevice = &deviceAS7262State;
-						break;
-					}
-#endif
-#if (WARP_BUILD_ENABLE_DEVAS7263)
-					case 'k':
-					{
-						menuTargetSensor = kWarpSensorAS7263;
-						menuI2cDevice = &deviceAS7263State;
 						break;
 					}
 #endif
@@ -3127,64 +3081,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tCCS811 Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorAS7262:
-		{
-			/*
-			 *	AS7262: VDD 2.7--3.6
-			 */
-			#if (WARP_BUILD_ENABLE_DEVAS7262)
-				loopForSensor(	"\r\nAS7262:\n\r",		/*	tagString			*/
-						&readSensorRegisterAS7262,	/*	readSensorRegisterFunction	*/
-						&deviceAS7262State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x2B,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tAS7262 Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorAS7263:
-		{
-			/*
-			 *	AS7263: VDD 2.7--3.6
-			 */
-			#if WARP_BUILD_ENABLE_DEVAS7263
-				loopForSensor(	"\r\nAS7263:\n\r",		/*	tagString			*/
-						&readSensorRegisterAS7263,	/*	readSensorRegisterFunction	*/
-						&deviceAS7263State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x2B,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tAS7263 Read Aborted. Device Disabled :( ");
 			#endif
 
 			break;

@@ -95,7 +95,6 @@ ADD_EXECUTABLE(Warp
     "${ProjDirPath}/../../src/devIS25xP.c"
     "${ProjDirPath}/../../src/devISL23415.c"
     "${ProjDirPath}/../../src/devAT45DB.c"
-#    "${ProjDirPath}/../../src/devICE40.c"
     "${ProjDirPath}/../../src/devMMA8451Q.c"
     "${ProjDirPath}/../../src/devLPS25H.c"
     "${ProjDirPath}/../../src/devHDC1000.c"
@@ -108,9 +107,6 @@ ADD_EXECUTABLE(Warp
     "${ProjDirPath}/../../src/devCCS811.c"
     "${ProjDirPath}/../../src/devRV8803C7.c"
     "${ProjDirPath}/../../src/devBGX.c"
-    "${ProjDirPath}/../../src/devAS7262.c"
-    "${ProjDirPath}/../../src/devAS7263.c"
-#   "${ProjDirPath}/../../src/devMAX11300.c
     "${ProjDirPath}/../../src/SEGGER_RTT.c"
     "${ProjDirPath}/../../src/SEGGER_RTT_printf.c"
     "${ProjDirPath}/../../src/devSSD1331.c"

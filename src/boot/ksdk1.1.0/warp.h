@@ -81,8 +81,6 @@ typedef enum
 	kWarpSensorSI7021,
 	kWarpSensorCCS811,
 	kWarpSensorPAN1326,
-	kWarpSensorAS7262,
-	kWarpSensorAS7263,
 	kWarpSensorSCD30,
 } WarpSensorDevice;
 
