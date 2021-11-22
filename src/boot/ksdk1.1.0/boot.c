@@ -392,14 +392,9 @@ warpEnableSPIpins(void)
 	/*	kWarpPinSPI_MOSI_UART_CTS --> PTA7 (ALT3)	*/
 	PORT_HAL_SetMuxMode(PORTA_BASE, 7, kPortMuxAlt3);
 
-	#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		/*	kWarpPinSPI_SCK	--> PTA9	(ALT3)		*/
-		PORT_HAL_SetMuxMode(PORTA_BASE, 9, kPortMuxAlt3);
-	#else
-		/*	kWarpPinSPI_SCK	--> PTB0	(ALT3)		*/
-		PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortMuxAlt3);
-	#endif
-
+	/*	kWarpPinSPI_SCK	--> PTB0	(ALT3)		*/
+	PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortMuxAlt3);
+	
 	/*
 	 *	Initialize SPI master. See KSDK13APIRM.pdf Section 70.4
 	 */
@@ -425,13 +420,8 @@ warpDisableSPIpins(void)
 	/*	kWarpPinSPI_MOSI_UART_CTS	--> PTA7	(GPIO)		*/
 	PORT_HAL_SetMuxMode(PORTA_BASE, 7, kPortMuxAsGpio);
 
-	#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		/*	kWarpPinSPI_SCK	--> PTA9	(GPIO)			*/
-		PORT_HAL_SetMuxMode(PORTA_BASE, 9, kPortMuxAsGpio);
-	#else
-		/*	kWarpPinSPI_SCK	--> PTB0	(GPIO)			*/
-		PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortMuxAsGpio);
-	#endif
+	/*	kWarpPinSPI_SCK	--> PTB0	(GPIO)			*/
+	PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortMuxAsGpio);
 
 //TODO: we don't use HW flow control so can remove these since we don't use the RTS/CTS
 	GPIO_DRV_ClearPinOutput(kWarpPinSPI_MOSI_UART_CTS);
@@ -491,406 +481,290 @@ warpDisableI2Cpins(void)
 	CLOCK_SYS_DisableI2cClock(0);
 }
 
+void
+lowPowerPinStates(void)
+{
+	/*
+	 *	Following Section 5 of "Power Management for Kinetis L Family" (AN5088.pdf),
+	 *	we configure all pins as output and set them to a known state. We choose
+	 *	to set them all to '0' since it happens that the devices we want to keep
+	 *	deactivated (SI4705) also need '0'.
+	 */
 
-#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
-	void
-	lowPowerPinStates(void)
-	{
-		/*
-		 *	Following Section 5 of "Power Management for Kinetis L Family" (AN5088.pdf),
-		 *	we configure all pins as output and set them to a known state, except for the
-		 *	sacrificial pins (WLCSP package, Glaux) where we set them to disabled. We choose
-		 *	to set non-disabled pins to '0'.
-		 *
-		 *	NOTE: Pin state "disabled" means default functionality is active.
-		 */
+	/*
+	 *			PORT A
+	 */
+	/*
+	 *	For now, don't touch the PTA0/1/2 SWD pins. Revisit in the future.
+	 */
+	PORT_HAL_SetMuxMode(PORTA_BASE, 0, kPortMuxAlt3);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 1, kPortMuxAlt3);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 2, kPortMuxAlt3);
 
-		/*
-		 *			PORT A
-		 */
-		/*
-		 *	Leave PTA0/1/2 SWD pins in their default state (i.e., as SWD / Alt3).
-		 *
-		 *	See GitHub issue https://github.com/physical-computation/Warp-firmware/issues/54
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 0, kPortMuxAlt3);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 1, kPortMuxAlt3);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 2, kPortMuxAlt3);
+	/*
+	 *	PTA3 and PTA4 are the EXTAL0/XTAL0. They are also connected to the clock output
+	 *	of the RV8803 (and PTA4 is a sacrificial pin for PTA3), so do not want to drive them.
+	 *	We however have to configure PTA3 to Alt0 (kPortPinDisabled) to get the EXTAL0
+	 *	functionality.
+	 *
+	 *	NOTE:	kPortPinDisabled is the equivalent of `Alt0`
+	 */
+	PORT_HAL_SetMuxMode(PORTA_BASE, 3, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 4, kPortPinDisabled);
 
-		/*
-		 *	PTA3 and PTA4 are the EXTAL0/XTAL0. They are also connected to the clock output
-		 *	of the RV8803 (and PTA4 is a sacrificial pin for PTA3), so do not want to drive them.
-		 *	We however have to configure PTA3 to Alt0 (kPortPinDisabled) to get the EXTAL0
-		 *	functionality.
-		 *
-		 *	NOTE:	kPortPinDisabled is the equivalent of `Alt0`
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 3, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 4, kPortPinDisabled);
+	/*
+	 *	Disable PTA5
+	 *
+	 *	NOTE: Enabling this significantly increases current draw
+	 *	(from ~180uA to ~4mA) and we don't need the RTC on revC.
+	 *
+	 */
+	PORT_HAL_SetMuxMode(PORTA_BASE, 5, kPortPinDisabled);
 
-		/*
-		 *	Disable PTA5
-		 *
-		 *	NOTE: Enabling this significantly increases current draw
-		 *	(from ~180uA to ~4mA) and we don't need the RTC on Glaux.
-		 *
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 5, kPortPinDisabled);
+	/*
+	 *	Section 2.6 of Kinetis Energy Savings – Tips and Tricks says
+	 *
+	 *		"Unused pins should be configured in the disabled state, mux(0),
+	 *		to prevent unwanted leakage (potentially caused by floating inputs)."
+	 *
+	 *	However, other documents advice to place pin as GPIO and drive low or high.
+	 *	For now, leave disabled. Filed issue #54 low-power pin states to investigate.
+	 */
+	PORT_HAL_SetMuxMode(PORTA_BASE, 6, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 7, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 8, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTA_BASE, 9, kPortPinDisabled);
 
-		/*
-		 *	PTA6, PTA7, PTA8, and PTA9 on Glaux are SPI and sacrificial SPI.
-		 *
-		 *	Section 2.6 of Kinetis Energy Savings – Tips and Tricks says
-		 *
-		 *		"Unused pins should be configured in the disabled state, mux(0),
-		 *		to prevent unwanted leakage (potentially caused by floating inputs)."
-		 *
-		 *	However, other documents advice to place pin as GPIO and drive low or high.
-		 *	For now, leave disabled. Filed issue #54 low-power pin states to investigate.
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 6, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 7, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 8, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 9, kPortPinDisabled);
-
-		/*
-		 *	NOTE: The KL03 has no PTA10 or PTA11
-		 */
-
-		/*
-		 *	In Glaux, PTA12 is a sacrificial pin for SWD_RESET, so careful not to drive it.
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 12, kPortPinDisabled);
+	/*
+	 *	NOTE: The KL03 has no PTA10 or PTA11
+	 */
+	PORT_HAL_SetMuxMode(PORTA_BASE, 12, kPortPinDisabled);
 
 
-
-		/*
-		 *			PORT B
-		 *
-		 *	PTB0 is LED on Glaux. PTB1 is unused, and PTB2 is FLASH_!CS
-		 */
-		PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortMuxAsGpio);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 1, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 2, kPortMuxAsGpio);
-
-		/*
-		 *	PTB3 and PTB4 (I2C pins) are true open-drain and we
-		 *	purposefully leave them disabled since they have pull-ups.
-		 *	PTB5 is sacrificial for I2C_SDA, so disable.
-		 */
-		PORT_HAL_SetMuxMode(PORTB_BASE, 3, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 4, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 5, kPortPinDisabled);
-
-		/*
-		 *	NOTE:
-		 *
-		 *	The KL03 has no PTB8, PTB9, or PTB12.  Additionally, the WLCSP package
-		 *	we in Glaux has no PTB6, PTB7, PTB10, or PTB11.
-		 */
-
-		/*
-		 *	In Glaux, PTB13 is a sacrificial pin for SWD_RESET, so careful not to drive it.
-		 */
-		PORT_HAL_SetMuxMode(PORTB_BASE, 13, kPortPinDisabled);
-
-		GPIO_DRV_SetPinOutput(kGlauxPinFlash_SPI_nCS);
-		GPIO_DRV_ClearPinOutput(kGlauxPinLED);
-
-		return;
-	}
-#else
-	void
-	lowPowerPinStates(void)
-	{
-		/*
-		 *	Following Section 5 of "Power Management for Kinetis L Family" (AN5088.pdf),
-		 *	we configure all pins as output and set them to a known state. We choose
-		 *	to set them all to '0' since it happens that the devices we want to keep
-		 *	deactivated (SI4705) also need '0'.
-		 */
-
-		/*
-		 *			PORT A
-		 */
-		/*
-		 *	For now, don't touch the PTA0/1/2 SWD pins. Revisit in the future.
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 0, kPortMuxAlt3);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 1, kPortMuxAlt3);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 2, kPortMuxAlt3);
-
-		/*
-		 *	PTA3 and PTA4 are the EXTAL0/XTAL0. They are also connected to the clock output
-		 *	of the RV8803 (and PTA4 is a sacrificial pin for PTA3), so do not want to drive them.
-		 *	We however have to configure PTA3 to Alt0 (kPortPinDisabled) to get the EXTAL0
-		 *	functionality.
-		 *
-		 *	NOTE:	kPortPinDisabled is the equivalent of `Alt0`
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 3, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 4, kPortPinDisabled);
-
-		/*
-		 *	Disable PTA5
-		 *
-		 *	NOTE: Enabling this significantly increases current draw
-		 *	(from ~180uA to ~4mA) and we don't need the RTC on revC.
-		 *
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 5, kPortPinDisabled);
-
-		/*
-		 *	Section 2.6 of Kinetis Energy Savings – Tips and Tricks says
-		 *
-		 *		"Unused pins should be configured in the disabled state, mux(0),
-		 *		to prevent unwanted leakage (potentially caused by floating inputs)."
-		 *
-		 *	However, other documents advice to place pin as GPIO and drive low or high.
-		 *	For now, leave disabled. Filed issue #54 low-power pin states to investigate.
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 6, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 7, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 8, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTA_BASE, 9, kPortPinDisabled);
-
-		/*
-		 *	NOTE: The KL03 has no PTA10 or PTA11
-		 */
-		PORT_HAL_SetMuxMode(PORTA_BASE, 12, kPortPinDisabled);
-
-
-		/*
-		 *			PORT B
-		 */
-		PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 1, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 2, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 3, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 4, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 5, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 6, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 7, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 10, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 11, kPortPinDisabled);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 13, kPortPinDisabled);
-	}
-#endif
+	/*
+	 *			PORT B
+	 */
+	PORT_HAL_SetMuxMode(PORTB_BASE, 0, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 1, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 2, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 3, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 4, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 5, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 6, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 7, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 10, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 11, kPortPinDisabled);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 13, kPortPinDisabled);
+}
 
 
 void
 disableTPS62740(void)
 {
-	#if (!WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_REGCTRL);
-	#endif
+	GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_REGCTRL);
 }
 
 void
 enableTPS62740(uint16_t voltageMillivolts)
 {
-	#if (!WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		/*
-		 *	By default, assusme pins are currently disabled (e.g., by a recent lowPowerPinStates())
-		 *
-		 *	Setup:
-		 *		PTB5/kWarpPinTPS62740_REGCTRL for GPIO
-		 *		PTB6/kWarpPinTPS62740_VSEL4 for GPIO
-		 *		PTB7/kWarpPinTPS62740_VSEL3 for GPIO
-		 *		PTB10/kWarpPinTPS62740_VSEL2 for GPIO
-		 *		PTB11/kWarpPinTPS62740_VSEL1 for GPIO
-		 */
-		PORT_HAL_SetMuxMode(PORTB_BASE, 5, kPortMuxAsGpio);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 6, kPortMuxAsGpio);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 7, kPortMuxAsGpio);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 10, kPortMuxAsGpio);
-		PORT_HAL_SetMuxMode(PORTB_BASE, 11, kPortMuxAsGpio);
+	/*
+	 *	By default, assusme pins are currently disabled (e.g., by a recent lowPowerPinStates())
+	 *
+	 *	Setup:
+	 *		PTB5/kWarpPinTPS62740_REGCTRL for GPIO
+	 *		PTB6/kWarpPinTPS62740_VSEL4 for GPIO
+	 *		PTB7/kWarpPinTPS62740_VSEL3 for GPIO
+	 *		PTB10/kWarpPinTPS62740_VSEL2 for GPIO
+	 *		PTB11/kWarpPinTPS62740_VSEL1 for GPIO
+	 */
+	PORT_HAL_SetMuxMode(PORTB_BASE, 5, kPortMuxAsGpio);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 6, kPortMuxAsGpio);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 7, kPortMuxAsGpio);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 10, kPortMuxAsGpio);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 11, kPortMuxAsGpio);
 
-		setTPS62740CommonControlLines(voltageMillivolts);
-		GPIO_DRV_SetPinOutput(kWarpPinTPS62740_REGCTRL);
-	#endif
+	setTPS62740CommonControlLines(voltageMillivolts);
+	GPIO_DRV_SetPinOutput(kWarpPinTPS62740_REGCTRL);
 }
 
 void
 setTPS62740CommonControlLines(uint16_t voltageMillivolts)
 {
-	#if (!WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		switch(voltageMillivolts)
+	switch(voltageMillivolts)
+	{
+		case 1800:
 		{
-			case 1800:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 1900:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+		case 1900:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2000:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2000:
+		{
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2100:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2100:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2200:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2200:
+		{
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2300:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2300:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2400:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2400:
+		{
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2500:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2500:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2600:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2600:
+		{
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2700:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2700:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2800:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2800:
+		{
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 2900:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 2900:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 3000:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 3000:
+		{
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 3100:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 3100:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 3200:
-			{
-				GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 3200:
+		{
+			GPIO_DRV_ClearPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
+			break;
+		}
 
-			case 3300:
-			{
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
-				GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
+		case 3300:
+		{
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL1);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL2);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL3);
+			GPIO_DRV_SetPinOutput(kWarpPinTPS62740_VSEL4);
 
-				break;
-			}
-
-			/*
-			 *	Should never happen, due to previous check in warpScaleSupplyVoltage()
-			 */
-			default:
-			{
-				warpPrint(RTT_CTRL_RESET RTT_CTRL_BG_BRIGHT_YELLOW RTT_CTRL_TEXT_BRIGHT_WHITE kWarpConstantStringErrorSanity RTT_CTRL_RESET "\n");
-			}
+			break;
 		}
 
 		/*
-		 *	Vload ramp time of the TPS62740 is 800us max (datasheet, Table 8.5 / page 6)
+		 *	Should never happen, due to previous check in warpScaleSupplyVoltage()
 		 */
-		OSA_TimeDelay(gWarpSupplySettlingDelayMilliseconds);
-	#endif
+		default:
+		{
+			warpPrint(RTT_CTRL_RESET RTT_CTRL_BG_BRIGHT_YELLOW RTT_CTRL_TEXT_BRIGHT_WHITE kWarpConstantStringErrorSanity RTT_CTRL_RESET "\n");
+		}
+	}
+
+	/*
+	 *	Vload ramp time of the TPS62740 is 800us max (datasheet, Table 8.5 / page 6)
+	 */
+	OSA_TimeDelay(gWarpSupplySettlingDelayMilliseconds);
 }
 
 
@@ -903,17 +777,15 @@ warpScaleSupplyVoltage(uint16_t voltageMillivolts)
 		return;
 	}
 
-	#if (!WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		if (voltageMillivolts >= 1800 && voltageMillivolts <= 3300)
-		{
-			enableTPS62740(voltageMillivolts);
-			gWarpCurrentSupplyVoltage = voltageMillivolts;
-		}
-		else
-		{
-			warpPrint(RTT_CTRL_RESET RTT_CTRL_BG_BRIGHT_RED RTT_CTRL_TEXT_BRIGHT_WHITE kWarpConstantStringErrorInvalidVoltage RTT_CTRL_RESET "\n", voltageMillivolts);
-		}
-	#endif
+	if (voltageMillivolts >= 1800 && voltageMillivolts <= 3300)
+	{
+		enableTPS62740(voltageMillivolts);
+		gWarpCurrentSupplyVoltage = voltageMillivolts;
+	}
+	else
+	{
+		warpPrint(RTT_CTRL_RESET RTT_CTRL_BG_BRIGHT_RED RTT_CTRL_TEXT_BRIGHT_WHITE kWarpConstantStringErrorInvalidVoltage RTT_CTRL_RESET "\n", voltageMillivolts);
+	}
 }
 
 
@@ -921,14 +793,12 @@ warpScaleSupplyVoltage(uint16_t voltageMillivolts)
 void
 warpDisableSupplyVoltage(void)
 {
-	#if (!WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		disableTPS62740();
+	disableTPS62740();
 
-		/*
-		 *	Vload ramp time of the TPS62740 is 800us max (datasheet, Table 8.5 / page 6)
-		 */
-		OSA_TimeDelay(gWarpSupplySettlingDelayMilliseconds);
-	#endif
+	/*
+	 *	Vload ramp time of the TPS62740 is 800us max (datasheet, Table 8.5 / page 6)
+	 */
+	OSA_TimeDelay(gWarpSupplySettlingDelayMilliseconds);
 }
 
 
@@ -990,7 +860,7 @@ printBootSplash(uint16_t gWarpCurrentSupplyVoltage, uint8_t menuRegisterAddress,
 	 *	We break up the prints with small delays to allow us to use small RTT print
 	 *	buffers without overrunning them when at max CPU speed.
 	 */
-	warpPrint("\r\n\n\n\n[ *\t\t\t\tWarp (HW revision C) / Glaux (HW revision B)\t\t\t* ]\n");
+	warpPrint("\r\n\n\n\n[ *\t\t\t\t        Warp (HW revision C)    \t\t\t\t* ]\n");
 	warpPrint("\r[  \t\t\t\t      Cambridge / Physcomplab   \t\t\t\t  ]\n\n");
 	warpPrint("\r\tSupply=%dmV,\tDefault Target Read Register=0x%02x\n",
 			gWarpCurrentSupplyVoltage, menuRegisterAddress);
@@ -1206,7 +1076,7 @@ main(void)
 	CLOCK_SYS_UpdateConfiguration(CLOCK_CONFIG_INDEX_FOR_RUN, kClockManagerPolicyForcible);
 
 	/*
-	 *	Initialize RTC Driver (not needed on Glaux, but we enable it anyway for now
+	 *	Initialize RTC Driver (We enable it anyway for now
 	 *	as that lets us use the current sleep routines). NOTE: We also don't seem to
 	 *	be able to go to VLPR mode unless we enable the RTC.
 	 */
@@ -1297,19 +1167,6 @@ main(void)
 	warpPrint("About to lowPowerPinStates()... ");
 	lowPowerPinStates();
 	warpPrint("done.\n");
-
-	/*
-	 *	Toggle LED3 (kWarpPinSI4705_nRST on Warp revB, kGlauxPinLED on Glaux)
-	 */
-	#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		blinkLED(kGlauxPinLED);
-		blinkLED(kGlauxPinLED);
-		blinkLED(kGlauxPinLED);
-
-		USED(disableTPS62740);
-		USED(enableTPS62740);
-		USED(setTPS62740CommonControlLines);
-	#endif
 
 	/*
 	 *	Initialize all the sensors
