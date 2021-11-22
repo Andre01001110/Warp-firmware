@@ -72,9 +72,6 @@ typedef enum
 	kWarpSensorINA219,
 	kWarpSensorBME680,
 	kWarpSensorTMP006B,
-	kWarpSensorMAG3110,
-	kWarpSensorL3GD20H,
-	kWarpSensorLPS25H,
 	kWarpSensorTCS34725,
 	kWarpSensorSI4705,
 	kWarpSensorSI7021,
@@ -94,13 +91,6 @@ typedef enum
 
     kWarpSensorConfigurationRegisterINA219CONFIG			= 0x00,
 	kWarpSensorConfigurationRegisterINA219CALIBRATE		    = 0x05,
-
-	kWarpSensorConfigurationRegisterMAG3110CTRL_REG1		= 0x10,
-	kWarpSensorConfigurationRegisterMAG3110CTRL_REG2		= 0x11,
-
-	kWarpSensorConfigurationRegisterL3GD20HCTRL1			= 0x20,
-	kWarpSensorConfigurationRegisterL3GD20HCTRL2			= 0x21,
-	kWarpSensorConfigurationRegisterL3GD20HCTRL5			= 0x24,
 	
 } WarpSensorConfigurationRegister;
 
@@ -114,22 +104,6 @@ typedef enum
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_LSB			= 0x06,
 	
 	kWarpSensorOutputRegisterINA219OUT_Current          = 0x04,
-
-	kWarpSensorOutputRegisterMAG3110OUT_X_MSB			= 0x01,
-	kWarpSensorOutputRegisterMAG3110OUT_X_LSB			= 0x02,
-	kWarpSensorOutputRegisterMAG3110OUT_Y_MSB			= 0x03,
-	kWarpSensorOutputRegisterMAG3110OUT_Y_LSB			= 0x04,
-	kWarpSensorOutputRegisterMAG3110OUT_Z_MSB			= 0x05,
-	kWarpSensorOutputRegisterMAG3110OUT_Z_LSB			= 0x06,
-	kWarpSensorOutputRegisterMAG3110DIE_TEMP			= 0x0F,
-
-	kWarpSensorOutputRegisterL3GD20HOUT_TEMP			= 0x26,
-	kWarpSensorOutputRegisterL3GD20HOUT_X_L				= 0x28,
-	kWarpSensorOutputRegisterL3GD20HOUT_X_H				= 0x29,
-	kWarpSensorOutputRegisterL3GD20HOUT_Y_L				= 0x2A,
-	kWarpSensorOutputRegisterL3GD20HOUT_Y_H				= 0x2B,
-	kWarpSensorOutputRegisterL3GD20HOUT_Z_L				= 0x2C,
-	kWarpSensorOutputRegisterL3GD20HOUT_Z_H				= 0x2D,
 
 	kWarpSensorOutputRegisterBME680press_msb			= 0x1F,
 	kWarpSensorOutputRegisterBME680press_lsb			= 0x20,

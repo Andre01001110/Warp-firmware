@@ -83,24 +83,9 @@
 	volatile WarpI2CDeviceState			deviceMMA8451QState;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVLPS25H)
-	#include "devLPS25H.h"
-	volatile WarpI2CDeviceState			deviceLPS25HState;
-#endif
-
-#if (WARP_BUILD_ENABLE_DEVMAG3110)
-	#include "devMAG3110.h"
-	volatile WarpI2CDeviceState			deviceMAG3110State;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVSI7021)
 	#include "devSI7021.h"
 	volatile WarpI2CDeviceState			deviceSI7021State;
-#endif
-
-#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-	#include "devL3GD20H.h"
-	volatile WarpI2CDeviceState			deviceL3GD20HState;
 #endif
 
 #if (WARP_BUILD_ENABLE_DEVTCS34725)
@@ -1361,20 +1346,8 @@ main(void)
 		initINA219(	0x40	/* i2cAddress */, kWarpDefaultSupplyVoltageMillivoltsINA219);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVLPS25H)
-		initLPS25H(	0x5C	/* i2cAddress */,	&deviceLPS25HState,		kWarpDefaultSupplyVoltageMillivoltsLPS25H	);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVMAG3110)
-		initMAG3110(	0x0E	/* i2cAddress */,	&deviceMAG3110State,		kWarpDefaultSupplyVoltageMillivoltsMAG3110	);
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVSI7021)
 		initSI7021(	0x40	/* i2cAddress */,	&deviceSI7021State,		kWarpDefaultSupplyVoltageMillivoltsSI7021	);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-		initL3GD20H(	0x6A	/* i2cAddress */,	&deviceL3GD20HState,		kWarpDefaultSupplyVoltageMillivoltsL3GD20H	);
 	#endif
 
 	#if (WARP_BUILD_ENABLE_DEVTCS34725)
@@ -1525,28 +1498,10 @@ main(void)
 					warpPrint("\r\t- '5' MMA8451Q			(0x00--0x31): 1.95V -- 3.6V (compiled out) \n");
 				#endif
 
-				#if (WARP_BUILD_ENABLE_DEVLPS25H)
-					warpPrint("\r\t- '6' LPS25H			(0x08--0x24): 1.7V -- 3.6V\n");
-				#else
-					warpPrint("\r\t- '6' LPS25H			(0x08--0x24): 1.7V -- 3.6V (compiled out) \n");
-				#endif
-
-				#if (WARP_BUILD_ENABLE_DEVMAG3110)
-					warpPrint("\r\t- '7' MAG3110			(0x00--0x11): 1.95V -- 3.6V\n");
-				#else
-					warpPrint("\r\t- '7' MAG3110			(0x00--0x11): 1.95V -- 3.6V (compiled out) \n");
-				#endif
-
 				#if (WARP_BUILD_ENABLE_DEVSI7021)
 					warpPrint("\r\t- '9' SI7021			(0x00--0x0F): 1.9V -- 3.6V\n");
 				#else
 					warpPrint("\r\t- '9' SI7021			(0x00--0x0F): 1.9V -- 3.6V (compiled out) \n");
-				#endif
-
-				#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-					warpPrint("\r\t- 'a' L3GD20H			(0x0F--0x39): 2.2V -- 3.6V\n");
-				#else
-					warpPrint("\r\t- 'a' L3GD20H			(0x0F--0x39): 2.2V -- 3.6V (compiled out) \n");
 				#endif
 				
 				#if (WARP_BUILD_ENABLE_DEVINA219)
@@ -1583,37 +1538,12 @@ main(void)
 						}
 					#endif
 
-					#if (WARP_BUILD_ENABLE_DEVLPS25H)
-						case '6':
-						{
-							menuTargetSensor = kWarpSensorLPS25H;
-							menuI2cDevice = &deviceLPS25HState;
-							break;
-						}
-					#endif
-
-					#if (WARP_BUILD_ENABLE_DEVMAG3110)
-						case '7':
-						{
-							menuTargetSensor = kWarpSensorMAG3110;
-							menuI2cDevice = &deviceMAG3110State;
-							break;
-						}
-					#endif
 
 #if (WARP_BUILD_ENABLE_DEVSI7021)
 					case '9':
 					{
 						menuTargetSensor = kWarpSensorSI7021;
 						menuI2cDevice = &deviceSI7021State;
-						break;
-					}
-#endif
-#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-					case 'a':
-					{
-						menuTargetSensor = kWarpSensorL3GD20H;
-						menuI2cDevice = &deviceL3GD20HState;
 						break;
 					}
 #endif
@@ -2147,17 +2077,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 					                                0x00 /* Payload: Calibrate LSB */
 					                                );
 	#endif
-	#if (WARP_BUILD_ENABLE_DEVMAG3110)
-	numberOfConfigErrors += configureSensorMAG3110(	0x00,/*	Payload: DR 000, OS 00, 80Hz, ADC 1280, Full 16bit, standby mode to set up register*/
-					0xA0,/*	Payload: AUTO_MRST_EN enable, RAW value without offset */
-					);
-	#endif
-	#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-	numberOfConfigErrors += configureSensorL3GD20H(	0b11111111,/* ODR 800Hz, Cut-off 100Hz, see table 21, normal mode, x,y,z enable */
-					0b00100000,
-					0b00000000/* normal mode, disable FIFO, disable high pass filter */
-					);
-	#endif
 
 	if (printHeadersAndCalibration)
 	{
@@ -2169,14 +2088,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 		
 		#if (WARP_BUILD_ENABLE_DEVINA219)
 			warpPrint(" INA219 Current,");
-		#endif
-
-		#if (WARP_BUILD_ENABLE_DEVMAG3110)
-			warpPrint(" MAG3110 x, MAG3110 y, MAG3110 z, MAG3110 Temp,");
-		#endif
-
-		#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-			warpPrint(" L3GD20H x, L3GD20H y, L3GD20H z, L3GD20H Temp,");
 		#endif
 
 		warpPrint(" RTC->TSR, RTC->TPR, # Config Errors");
@@ -2193,14 +2104,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 		
 		#if (WARP_BUILD_ENABLE_DEVINA219)
 			printSensorDataINA219(hexModeFlag);
-		#endif
-
-		#if (WARP_BUILD_ENABLE_DEVMAG3110)
-			printSensorDataMAG3110(hexModeFlag);
-		#endif
-
-		#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-			printSensorDataL3GD20H(hexModeFlag);
 		#endif
 
 		warpPrint(" %12d, %6d, %2u\n", RTC->TSR, RTC->TPR, numberOfConfigErrors);
@@ -2422,93 +2325,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tINA219 Read Aborted. Device Disabled :(");
-			#endif
-
-			break;
-		}
-		
-		case kWarpSensorMAG3110:
-		{
-			/*
-			 *	MAG3110: VDD 1.95 -- 3.6
-			 */
-			#if (WARP_BUILD_ENABLE_DEVMAG3110)
-				loopForSensor(	"\r\nMAG3110:\n\r",		/*	tagString			*/
-						&readSensorRegisterMAG3110,	/*	readSensorRegisterFunction	*/
-						&deviceMAG3110State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x11,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tMAG3110 Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorL3GD20H:
-		{
-			/*
-			 *	L3GD20H: VDD 2.2V -- 3.6V
-			 */
-			#if (WARP_BUILD_ENABLE_DEVL3GD20H)
-				loopForSensor(	"\r\nL3GD20H:\n\r",		/*	tagString			*/
-						&readSensorRegisterL3GD20H,	/*	readSensorRegisterFunction	*/
-						&deviceL3GD20HState,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x0F,				/*	minAddress			*/
-						0x39,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tL3GD20H Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorLPS25H:
-		{
-			/*
-			 *	LPS25H: VDD 1.7V -- 3.6V
-			 */
-			#if (WARP_BUILD_ENABLE_DEVLPS25H)
-				loopForSensor(	"\r\nLPS25H:\n\r",		/*	tagString			*/
-						&readSensorRegisterLPS25H,	/*	readSensorRegisterFunction	*/
-						&deviceLPS25HState,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x08,				/*	minAddress			*/
-						0x24,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tLPS25H Read Aborted. Device Disabled :( ");
 			#endif
 
 			break;
