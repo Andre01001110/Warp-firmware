@@ -42,7 +42,6 @@
 #define		WARP_BUILD_ENABLE_FRDMKL03			1
 
 #if (WARP_BUILD_ENABLE_FRDMKL03)
-	#define		WARP_BUILD_ENABLE_DEVBGX		0
 	#define		WARP_BUILD_ENABLE_DEVBME680		0
 	#define		WARP_BUILD_ENABLE_DEVCCS811		0
 	#define		WARP_BUILD_ENABLE_DEVHDC1000		0
@@ -94,7 +93,6 @@ typedef enum
 	 *	Voltages
 	 */
 	kWarpDefaultSupplyVoltageMillivolts			= 1800,
-	kWarpDefaultSupplyVoltageMillivoltsBGX			= 3300,
 	kWarpDefaultSupplyVoltageMillivoltsMMA8451Q		= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsINA219		= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsLPS25H		= 1800,

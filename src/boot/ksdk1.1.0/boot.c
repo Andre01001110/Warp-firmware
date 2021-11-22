@@ -148,11 +148,6 @@
 	volatile WarpI2CDeviceState			deviceRV8803C7State;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVBGX)
-	#include "devBGX.h"
-	volatile WarpUARTDeviceState			deviceBGXState;
-#endif
-
 
 volatile i2c_master_state_t				i2cMasterState;
 volatile spi_master_state_t				spiMasterState;
@@ -1158,56 +1153,9 @@ warpPrint(const char *fmt, ...)
 		{
 			SEGGER_RTT_WriteString(0, gWarpEfmt);
 
-			#if (WARP_BUILD_ENABLE_DEVBGX)
-				if (gWarpBooted)
-				{
-					WarpStatus	status;
-
-					enableLPUARTpins();
-					initBGX(kWarpDefaultSupplyVoltageMillivoltsBGX);
-					status = sendBytesToUART((uint8_t *)gWarpEfmt, strlen(gWarpEfmt)+1);
-					if (status != kWarpStatusOK)
-					{
-						SEGGER_RTT_WriteString(0, gWarpEuartSendChars);
-					}
-					disableLPUARTpins();
-
-					/*
-					 *	We don't want to deInit() the BGX since that would drop
-					 *	any remote terminal connected to it.
-					 */
-					//deinitBGX();
-				}
-			#endif
-
 			return;
 		}
 
-		/*
-		 *	If WARP_BUILD_ENABLE_DEVBGX, also send the fmt to the UART / BLE.
-		 */
-		#if (WARP_BUILD_ENABLE_DEVBGX)
-			if (gWarpBooted)
-			{
-				WarpStatus	status;
-
-				enableLPUARTpins();
-				initBGX(kWarpDefaultSupplyVoltageMillivoltsBGX);
-
-				status = sendBytesToUART((uint8_t *)gWarpPrintBuffer, max(fmtlen, kWarpDefaultPrintBufferSizeBytes));
-				if (status != kWarpStatusOK)
-				{
-					SEGGER_RTT_WriteString(0, gWarpEuartSendChars);
-				}
-				disableLPUARTpins();
-
-				/*
-				 *	We don't want to deInit() the BGX since that would drop
-				 *	any remote terminal connected to it.
-				 */
-				//deinitBGX();
-			}
-		#endif
 	#else
 		/*
 		 *	If we are not compiling in the SEGGER_RTT_printf,
@@ -1215,30 +1163,6 @@ warpPrint(const char *fmt, ...)
 		 */
 		SEGGER_RTT_WriteString(0, fmt);
 
-		/*
-		 *	If WARP_BUILD_ENABLE_DEVBGX, also send the fmt to the UART / BLE.
-		 */
-		#if (WARP_BUILD_ENABLE_DEVBGX)
-			if (gWarpBooted)
-			{
-				WarpStatus	status;
-
-				enableLPUARTpins();
-				initBGX(kWarpDefaultSupplyVoltageMillivoltsBGX);
-				status = sendBytesToUART(fmt, strlen(fmt));
-				if (status != kWarpStatusOK)
-				{
-					SEGGER_RTT_WriteString(0, gWarpEuartSendChars);
-				}
-				disableLPUARTpins();
-
-				/*
-				 *	We don't want to deInit() the BGX since that would drop
-				 *	any remote terminal connected to it.
-				 */
-				//deinitBGX();
-			}
-		#endif
 	#endif
 
 	return;
@@ -1260,19 +1184,10 @@ warpWaitKey(void)
 	 *	The check below on rttKey is exactly what SEGGER_RTT_WaitKey()
 	 *	does in SEGGER_RTT.c.
 	 */
-	#if (WARP_BUILD_ENABLE_DEVBGX)
-		deviceBGXState.uartRXBuffer[0] = kWarpMiscMarkerForAbsentByte;
-		enableLPUARTpins();
-		initBGX(kWarpDefaultSupplyVoltageMillivoltsBGX);
-	#endif
 
 	do
 	{
 		rttKey	= SEGGER_RTT_GetKey();
-
-		#if (WARP_BUILD_ENABLE_DEVBGX)
-			bleChar	= deviceBGXState.uartRXBuffer[0];
-		#endif
 
 		/*
 		 *	NOTE: We ignore all chars on BLE except '0'-'9', 'a'-'z'/'A'-Z'
@@ -1282,42 +1197,6 @@ warpWaitKey(void)
 			bleChar = kWarpMiscMarkerForAbsentByte;
 		}
 	} while ((rttKey < 0) && (bleChar == kWarpMiscMarkerForAbsentByte));
-
-	#if (WARP_BUILD_ENABLE_DEVBGX)
-		if (bleChar != kWarpMiscMarkerForAbsentByte)
-		{
-			/*
-			 *	Send a copy of incoming BLE chars to RTT
-			 */
-			SEGGER_RTT_PutChar(0, bleChar);
-			disableLPUARTpins();
-
-			/*
-			 *	We don't want to deInit() the BGX since that would drop
-			 *	any remote terminal connected to it.
-			 */
-			//deinitBGX();
-
-			return (int)bleChar;
-		}
-
-		/*
-		 *	Send a copy of incoming RTT chars to BLE
-		 */
-		WarpStatus status = sendBytesToUART((uint8_t *)&rttKey, 1);
-		if (status != kWarpStatusOK)
-		{
-			SEGGER_RTT_WriteString(0, gWarpEuartSendChars);
-		}
-
-		disableLPUARTpins();
-
-		/*
-		 *	We don't want to deInit() the BGX since that would drop
-		 *	any remote terminal connected to it.
-		 */
-		//deinitBGX();
-	#endif
 
 	return rttKey;
 }
@@ -1677,16 +1556,6 @@ main(void)
 		 *	Only supported in main Warp variant.
 		 */
 		initICE40(kWarpPinFPGA_nCS,							kWarpDefaultSupplyVoltageMillivoltsICE40	);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVBGX)
-		warpPrint("Configuring BGX Bluetooth.\n");
-		warpPrint("Enabling UART... ");
-		enableLPUARTpins();
-		warpPrint("done.\n");
-		warpPrint("initBGX()... ");
-		initBGX(kWarpDefaultSupplyVoltageMillivoltsBGX);
-		warpPrint("done.\n");
 	#endif
 
 	/*
