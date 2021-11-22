@@ -77,11 +77,6 @@
 	volatile WarpSPIDeviceState			deviceISL23415State;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVICE40)
-	#include "devICE40.h"
-	volatile WarpSPIDeviceState			deviceICE40State;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVSSD1331)
 	#include "devSSD1331.h"
 	volatile WarpSPIDeviceState			deviceSSD1331State;
@@ -521,10 +516,6 @@ warpDeasserAllSPIchipSelects(void)
 
 	#if (WARP_BUILD_ENABLE_DEVISL23415)
 		GPIO_DRV_SetPinOutput(kWarpPinISL23415_SPI_nCS);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVICE40)
-		GPIO_DRV_SetPinOutput(kWarpPinFPGA_nCS);
 	#endif
 
 	#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
@@ -1522,13 +1513,6 @@ main(void)
 		}
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVICE40)
-		/*
-		 *	Only supported in main Warp variant.
-		 */
-		initICE40(kWarpPinFPGA_nCS,							kWarpDefaultSupplyVoltageMillivoltsICE40	);
-	#endif
-
 	/*
 	 *	At this point, we consider the system "booted" and, e.g., warpPrint()s
 	 *	will also be sent to the BLE if that is compiled in.
@@ -1590,10 +1574,6 @@ main(void)
 		warpPrint("\r- 'r': switch to RUN mode.\n");
 		warpPrint("\r- 't': dump processor state.\n");
 		warpPrint("\r- 'u': set I2C address.\n");
-
-		#if (WARP_BUILD_ENABLE_DEVICE40)
-			warpPrint("\r- 'P': write bytes to FPGA configuration.\n");
-		#endif
 
 		#if (WARP_BUILD_ENABLE_DEVRV8803C7)
 			warpPrint("\r- 'v': Enter VLLS0 low-power mode for 3s, then reset\n");
