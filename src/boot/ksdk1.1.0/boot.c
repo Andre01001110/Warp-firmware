@@ -67,15 +67,6 @@
 #define							kWarpConstantStringErrorSanity		"\rSanity check failed!"
 
 
-#if (WARP_BUILD_ENABLE_DEVIS25xP)
-	#include "devIS25xP.h"
-	volatile WarpSPIDeviceState			deviceIS25xPState;
-#endif
-
-#if (WARP_BUILD_ENABLE_DEVISL23415)
-	#include "devISL23415.h"
-	volatile WarpSPIDeviceState			deviceISL23415State;
-#endif
 
 #if (WARP_BUILD_ENABLE_DEVSSD1331)
 	#include "devSSD1331.h"
@@ -485,42 +476,6 @@ warpDisableSPIpins(void)
 	GPIO_DRV_ClearPinOutput(kWarpPinSPI_SCK);
 
 	CLOCK_SYS_DisableSpiClock(0);
-}
-
-
-
-void
-warpDeasserAllSPIchipSelects(void)
-{
-	/*
-	 *	By default, assusme pins are currently disabled (e.g., by a recent lowPowerPinStates())
-	 *
-	 *	Drive all chip selects high to disable them. Individual drivers call this routine before
-	 *	appropriately asserting their respective chip selects.
-	 *
-	 *	Setup:
-	 *		PTA12/kWarpPinISL23415_SPI_nCS	for GPIO
-	 *		PTA9/kWarpPinAT45DB_SPI_nCS	for GPIO
-	 *		PTB1/kWarpPinFPGA_nCS		for GPIO
-	 *
-	 *		On Glaux
-	 		PTB2/kGlauxPinFlash_SPI_nCS for GPIO
-	 */
-	PORT_HAL_SetMuxMode(PORTA_BASE, 12, kPortMuxAsGpio);
-	PORT_HAL_SetMuxMode(PORTA_BASE, 9, kPortMuxAsGpio);
-	PORT_HAL_SetMuxMode(PORTA_BASE, 8, kPortMuxAsGpio);
-	PORT_HAL_SetMuxMode(PORTB_BASE, 1, kPortMuxAsGpio);
-	#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		PORT_HAL_SetMuxMode(PORTB_BASE, 2, kPortMuxAsGpio);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVISL23415)
-		GPIO_DRV_SetPinOutput(kWarpPinISL23415_SPI_nCS);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
-		GPIO_DRV_SetPinOutput(kGlauxPinFlash_SPI_nCS);
-	#endif
 }
 
 
@@ -1476,42 +1431,6 @@ main(void)
 	/*
 	 *	Initialization: Devices hanging off SPI
 	 */
-
-	#if (WARP_BUILD_ENABLE_DEVISL23415)
-		/*
-		 *	Only supported in main Warp variant.
-		 */
-		initISL23415(kWarpPinISL23415_SPI_nCS, kWarpDefaultSupplyVoltageMillivoltsISL23415);
-
-		/*
-		 *	Take the DCPs out of shutdown by setting the SHDN bit in the ACR register
-		 */
-		status = writeDeviceRegisterISL23415(kWarpSensorConfigurationRegisterISL23415ACRwriteInstruction, 0x40);
-		if (status != kWarpStatusOK)
-		{
-			warpPrint("ISL23415: SPI transaction to write ACR failed...\n");
-		}
-
-		status = readDeviceRegisterISL23415(kWarpSensorConfigurationRegisterISL23415ACRreadInstruction);
-		if (status != kWarpStatusOK)
-		{
-			warpPrint("ISL23415: SPI transaction to read ACR failed...\n");
-		}
-		else
-		{
-			warpPrint("ISL23415 ACR=[0x%02X], ", deviceISL23415State.spiSinkBuffer[3]);
-		}
-
-		status = readDeviceRegisterISL23415(kWarpSensorConfigurationRegisterISL23415WRreadInstruction);
-		if (status != kWarpStatusOK)
-		{
-			warpPrint("ISL23415: SPI transaction to read WR failed...\n");
-		}
-		else
-		{
-			warpPrint("WR=[0x%02X]\n", deviceISL23415State.spiSinkBuffer[3]);
-		}
-	#endif
 
 	/*
 	 *	At this point, we consider the system "booted" and, e.g., warpPrint()s
