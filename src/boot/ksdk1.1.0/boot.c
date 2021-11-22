@@ -102,11 +102,6 @@
 	volatile WarpI2CDeviceState			deviceLPS25HState;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVHDC1000)
-	#include "devHDC1000.h"
-	volatile WarpI2CDeviceState			deviceHDC1000State;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVMAG3110)
 	#include "devMAG3110.h"
 	volatile WarpI2CDeviceState			deviceMAG3110State;
@@ -1424,10 +1419,6 @@ main(void)
 		initLPS25H(	0x5C	/* i2cAddress */,	&deviceLPS25HState,		kWarpDefaultSupplyVoltageMillivoltsLPS25H	);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVHDC1000)
-		initHDC1000(	0x43	/* i2cAddress */,	&deviceHDC1000State,		kWarpDefaultSupplyVoltageMillivoltsHDC1000	);
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVMAG3110)
 		initMAG3110(	0x0E	/* i2cAddress */,	&deviceMAG3110State,		kWarpDefaultSupplyVoltageMillivoltsMAG3110	);
 	#endif
@@ -1647,12 +1638,6 @@ main(void)
 					warpPrint("\r\t- '7' MAG3110			(0x00--0x11): 1.95V -- 3.6V (compiled out) \n");
 				#endif
 
-				#if (WARP_BUILD_ENABLE_DEVHDC1000)
-					warpPrint("\r\t- '8' HDC1000			(0x00--0x1F): 3.0V -- 5.0V\n");
-				#else
-					warpPrint("\r\t- '8' HDC1000			(0x00--0x1F): 3.0V -- 5.0V (compiled out) \n");
-				#endif
-
 				#if (WARP_BUILD_ENABLE_DEVSI7021)
 					warpPrint("\r\t- '9' SI7021			(0x00--0x0F): 1.9V -- 3.6V\n");
 				#else
@@ -1713,15 +1698,6 @@ main(void)
 						{
 							menuTargetSensor = kWarpSensorMAG3110;
 							menuI2cDevice = &deviceMAG3110State;
-							break;
-						}
-					#endif
-
-					#if (WARP_BUILD_ENABLE_DEVHDC1000)
-						case '8':
-						{
-							menuTargetSensor = kWarpSensorHDC1000;
-							menuI2cDevice = &deviceHDC1000State;
 							break;
 						}
 					#endif
@@ -2284,12 +2260,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 					);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVHDC1000)
-	numberOfConfigErrors += writeSensorRegisterHDC1000(kWarpSensorConfigurationRegisterHDC1000Configuration,/* Configuration register	*/
-					(0b1010000<<8),
-					);
-	#endif
-
 	if (printHeadersAndCalibration)
 	{
 		warpPrint("Measurement number, RTC->TSR, RTC->TPR,\t\t");
@@ -2308,10 +2278,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 
 		#if (WARP_BUILD_ENABLE_DEVL3GD20H)
 			warpPrint(" L3GD20H x, L3GD20H y, L3GD20H z, L3GD20H Temp,");
-		#endif
-
-		#if (WARP_BUILD_ENABLE_DEVHDC1000)
-			warpPrint(" HDC1000 Temp, HDC1000 Hum,");
 		#endif
 
 		warpPrint(" RTC->TSR, RTC->TPR, # Config Errors");
@@ -2336,10 +2302,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 
 		#if (WARP_BUILD_ENABLE_DEVL3GD20H)
 			printSensorDataL3GD20H(hexModeFlag);
-		#endif
-
-		#if (WARP_BUILD_ENABLE_DEVHDC1000)
-			printSensorDataHDC1000(hexModeFlag);
 		#endif
 
 		warpPrint(" %12d, %6d, %2u\n", RTC->TSR, RTC->TPR, numberOfConfigErrors);
@@ -2706,35 +2668,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tSI4705 Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorHDC1000:
-		{
-			/*
-			 *	HDC1000: VDD 3V--5V
-			 */
-			#if (WARP_BUILD_ENABLE_DEVHDC1000)
-				loopForSensor(	"\r\nHDC1000:\n\r",		/*	tagString			*/
-						&readSensorRegisterHDC1000,	/*	readSensorRegisterFunction	*/
-						&deviceHDC1000State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x1F,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tHDC1000 Read Aborted. Device Disabled :( ");
 			#endif
 
 			break;
