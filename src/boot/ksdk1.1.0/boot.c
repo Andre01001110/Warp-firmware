@@ -77,11 +77,6 @@
 	volatile WarpSPIDeviceState			deviceISL23415State;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVAT45DB)
-	#include "devAT45DB.h"
-	volatile WarpSPIDeviceState			deviceAT45DBState;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVICE40)
 	#include "devICE40.h"
 	volatile WarpSPIDeviceState			deviceICE40State;
@@ -547,10 +542,6 @@ warpDeasserAllSPIchipSelects(void)
 
 	#if (WARP_BUILD_ENABLE_DEVISL23415)
 		GPIO_DRV_SetPinOutput(kWarpPinISL23415_SPI_nCS);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVAT45DB)
-		GPIO_DRV_SetPinOutput(kWarpPinAT45DB_SPI_nCS);
 	#endif
 
 	#if (WARP_BUILD_ENABLE_DEVICE40)
@@ -1681,26 +1672,6 @@ main(void)
 		}
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVAT45DB)
-		/*
-		 *	Only supported in main Warp variant.
-		 */
-		initAT45DB(kWarpPinAT45DB_SPI_nCS,						kWarpDefaultSupplyVoltageMillivoltsAT45DB	);
-
-		status = spiTransactionAT45DB(&deviceAT45DBState, (uint8_t *)"\x9F\x00\x00\x00\x00\x00", 6 /* opCount */);
-		if (status != kWarpStatusOK)
-		{
-			warpPrint("AT45DB: SPI transaction to read Manufacturer ID failed...\n");
-		}
-		else
-		{
-			warpPrint("AT45DB Manufacturer ID=[0x%02X], Device ID=[0x%02X 0x%02X], Extended Device Information=[0x%02X 0x%02X]\n",
-						deviceAT45DBState.spiSinkBuffer[1],
-						deviceAT45DBState.spiSinkBuffer[2], deviceAT45DBState.spiSinkBuffer[3],
-						deviceAT45DBState.spiSinkBuffer[4], deviceAT45DBState.spiSinkBuffer[5]);
-		}
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVICE40)
 		/*
 		 *	Only supported in main Warp variant.
@@ -1779,11 +1750,6 @@ main(void)
 		warpPrint("\r- 'r': switch to RUN mode.\n");
 		warpPrint("\r- 't': dump processor state.\n");
 		warpPrint("\r- 'u': set I2C address.\n");
-
-		#if (WARP_BUILD_ENABLE_DEVAT45DB)
-			warpPrint("\r- 'R': read bytes from Flash.\n");
-			warpPrint("\r- 'F': write bytes to Flash.\n");
-		#endif
 
 		#if (WARP_BUILD_ENABLE_DEVICE40)
 			warpPrint("\r- 'P': write bytes to FPGA configuration.\n");
