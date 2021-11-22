@@ -83,19 +83,9 @@
 	volatile WarpI2CDeviceState			deviceMMA8451QState;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVSI7021)
-	#include "devSI7021.h"
-	volatile WarpI2CDeviceState			deviceSI7021State;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVTCS34725)
 	#include "devTCS34725.h"
 	volatile WarpI2CDeviceState			deviceTCS34725State;
-#endif
-
-#if (WARP_BUILD_ENABLE_DEVSI4705)
-	#include "devSI4705.h"
-	volatile WarpI2CDeviceState			deviceSI4705State;
 #endif
 
 #if (WARP_BUILD_ENABLE_DEVRV8803C7)
@@ -1346,16 +1336,8 @@ main(void)
 		initINA219(	0x40	/* i2cAddress */, kWarpDefaultSupplyVoltageMillivoltsINA219);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVSI7021)
-		initSI7021(	0x40	/* i2cAddress */,	&deviceSI7021State,		kWarpDefaultSupplyVoltageMillivoltsSI7021	);
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVTCS34725)
 		initTCS34725(	0x29	/* i2cAddress */,	&deviceTCS34725State,		kWarpDefaultSupplyVoltageMillivoltsTCS34725	);
-	#endif
-
-	#if (WARP_BUILD_ENABLE_DEVSI4705)
-		initSI4705(	0x11	/* i2cAddress */,	&deviceSI4705State,		kWarpDefaultSupplyVoltageMillivoltsSI4705	);
 	#endif
 
 	#if (WARP_BUILD_ENABLE_DEVRV8803C7)
@@ -1497,12 +1479,6 @@ main(void)
 				#else
 					warpPrint("\r\t- '5' MMA8451Q			(0x00--0x31): 1.95V -- 3.6V (compiled out) \n");
 				#endif
-
-				#if (WARP_BUILD_ENABLE_DEVSI7021)
-					warpPrint("\r\t- '9' SI7021			(0x00--0x0F): 1.9V -- 3.6V\n");
-				#else
-					warpPrint("\r\t- '9' SI7021			(0x00--0x0F): 1.9V -- 3.6V (compiled out) \n");
-				#endif
 				
 				#if (WARP_BUILD_ENABLE_DEVINA219)
 					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V\n");
@@ -1514,12 +1490,6 @@ main(void)
 					warpPrint("\r\t- 'd' TCS34725			(0x00--0x1D): 2.7V -- 3.3V\n");
 				#else
 					warpPrint("\r\t- 'd' TCS34725			(0x00--0x1D): 2.7V -- 3.3V (compiled out) \n");
-				#endif
-
-				#if (WARP_BUILD_ENABLE_DEVSI4705)
-					warpPrint("\r\t- 'e' SI4705			(n/a):        2.7V -- 5.5V\n");
-				#else
-					warpPrint("\r\t- 'e' SI4705			(n/a):        2.7V -- 5.5V (compiled out) \n");
 				#endif
 
 				warpPrint("\r\tEnter selection>");
@@ -1538,15 +1508,6 @@ main(void)
 						}
 					#endif
 
-
-#if (WARP_BUILD_ENABLE_DEVSI7021)
-					case '9':
-					{
-						menuTargetSensor = kWarpSensorSI7021;
-						menuI2cDevice = &deviceSI7021State;
-						break;
-					}
-#endif
 #if (WARP_BUILD_ENABLE_DEVINA219)
 					case 'c':
 					{
@@ -1560,14 +1521,6 @@ main(void)
 					{
 						menuTargetSensor = kWarpSensorTCS34725;
 						menuI2cDevice = &deviceTCS34725State;
-						break;
-					}
-#endif
-#if (WARP_BUILD_ENABLE_DEVSI4705)
-					case 'e':
-					{
-						menuTargetSensor = kWarpSensorSI4705;
-						menuI2cDevice = &deviceSI4705State;
 						break;
 					}
 #endif
@@ -2354,64 +2307,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tTCS34725 Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorSI4705:
-		{
-			/*
-			 *	SI4705: VDD 2.7V -- 5.5V
-			 */
-			#if (WARP_BUILD_ENABLE_DEVSI4705)
-				loopForSensor(	"\r\nSI4705:\n\r",		/*	tagString			*/
-						&readSensorRegisterSI4705,	/*	readSensorRegisterFunction	*/
-						&deviceSI4705State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x09,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tSI4705 Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorSI7021:
-		{
-			/*
-			 *	SI7021: VDD 1.9V -- 3.6V
-			 */
-			#if (WARP_BUILD_ENABLE_DEVSI7021)
-				loopForSensor(	"\r\nSI7021:\n\r",		/*	tagString			*/
-						&readSensorRegisterSI7021,	/*	readSensorRegisterFunction	*/
-						&deviceSI7021State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x09,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tSI7021 Read Aborted. Device Disabled :( ");
 			#endif
 
 			break;
