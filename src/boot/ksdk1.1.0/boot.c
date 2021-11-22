@@ -122,12 +122,6 @@
 	volatile WarpI2CDeviceState			deviceL3GD20HState;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVBME680)
-	#include "devBME680.h"
-	volatile WarpI2CDeviceState			deviceBME680State;
-	volatile uint8_t				deviceBME680CalibrationValues[kWarpSizesBME680CalibrationValuesCount];
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVTCS34725)
 	#include "devTCS34725.h"
 	volatile WarpI2CDeviceState			deviceTCS34725State;
@@ -1451,11 +1445,6 @@ main(void)
 		initL3GD20H(	0x6A	/* i2cAddress */,	&deviceL3GD20HState,		kWarpDefaultSupplyVoltageMillivoltsL3GD20H	);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVBME680)
-//		initBME680(	0x77	/* i2cAddress */,	&deviceBME680State,		kWarpDefaultSupplyVoltageMillivoltsBME680	);
-		initBME680(	0x77	/* i2cAddress */,		kWarpDefaultSupplyVoltageMillivoltsBME680	);
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVTCS34725)
 		initTCS34725(	0x29	/* i2cAddress */,	&deviceTCS34725State,		kWarpDefaultSupplyVoltageMillivoltsTCS34725	);
 	#endif
@@ -1684,12 +1673,6 @@ main(void)
 				#else
 					warpPrint("\r\t- 'a' L3GD20H			(0x0F--0x39): 2.2V -- 3.6V (compiled out) \n");
 				#endif
-
-				#if (WARP_BUILD_ENABLE_DEVBME680)
-					warpPrint("\r\t- 'b' BME680			(0xAA--0xF8): 1.6V -- 3.6V\n");
-				#else
-					warpPrint("\r\t- 'b' BME680			(0xAA--0xF8): 1.6V -- 3.6V (compiled out) \n");
-				#endif
 				
 				#if (WARP_BUILD_ENABLE_DEVINA219)
 					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V\n");
@@ -1771,14 +1754,6 @@ main(void)
 					{
 						menuTargetSensor = kWarpSensorL3GD20H;
 						menuI2cDevice = &deviceL3GD20HState;
-						break;
-					}
-#endif
-#if (WARP_BUILD_ENABLE_DEVBME680)
-					case 'b':
-					{
-						menuTargetSensor = kWarpSensorBME680;
-						menuI2cDevice = &deviceBME680State;
 						break;
 					}
 #endif
@@ -2331,29 +2306,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 					0b00000000/* normal mode, disable FIFO, disable high pass filter */
 					);
 	#endif
-	#if (WARP_BUILD_ENABLE_DEVBME680)
-	numberOfConfigErrors += configureSensorBME680(	0b00000001,	/*	payloadCtrl_Hum: Humidity oversampling (OSRS) to 1x				*/
-							0b00100100,	/*	payloadCtrl_Meas: Temperature oversample 1x, pressure overdsample 1x, mode 00	*/
-							0b00001000	/*	payloadGas_0: Turn off heater							*/
-					);
-
-	if (printHeadersAndCalibration)
-	{
-		warpPrint("\r\n\nBME680 Calibration Data: ");
-		for (uint8_t i = 0; i < kWarpSizesBME680CalibrationValuesCount; i++)
-		{
-			warpPrint("0x%02x", deviceBME680CalibrationValues[i]);
-			if (i < kWarpSizesBME680CalibrationValuesCount - 1)
-			{
-				warpPrint(", ");
-			}
-			else
-			{
-				warpPrint("\n\n");
-			}
-		}
-	}
-	#endif
 
 	#if (WARP_BUILD_ENABLE_DEVHDC1000)
 	numberOfConfigErrors += writeSensorRegisterHDC1000(kWarpSensorConfigurationRegisterHDC1000Configuration,/* Configuration register	*/
@@ -2388,10 +2340,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 			warpPrint(" L3GD20H x, L3GD20H y, L3GD20H z, L3GD20H Temp,");
 		#endif
 
-		#if (WARP_BUILD_ENABLE_DEVBME680)
-			warpPrint(" BME680 Press, BME680 Temp, BME680 Hum,");
-		#endif
-
 		#if (WARP_BUILD_ENABLE_DEVCCS811)
 			warpPrint(" CCS811 ECO2, CCS811 TVOC, CCS811 RAW ADC value,");
 		#endif
@@ -2422,10 +2370,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 
 		#if (WARP_BUILD_ENABLE_DEVL3GD20H)
 			printSensorDataL3GD20H(hexModeFlag);
-		#endif
-
-		#if (WARP_BUILD_ENABLE_DEVBME680)
-			printSensorDataBME680(hexModeFlag);
 		#endif
 
 		#if (WARP_BUILD_ENABLE_DEVCCS811)
@@ -2655,35 +2599,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tINA219 Read Aborted. Device Disabled :(");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorBME680:
-		{
-			/*
-			 *	BME680: VDD 1.7--3.6
-			 */
-			#if (WARP_BUILD_ENABLE_DEVBME680)
-				loopForSensor(	"\r\nBME680:\n\r",		/*	tagString			*/
-						&readSensorRegisterBME680,	/*	readSensorRegisterFunction	*/
-						&deviceBME680State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x1D,				/*	minAddress			*/
-						0x75,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\nBME680 Read Aborted. Device Disabled :(");
 			#endif
 
 			break;

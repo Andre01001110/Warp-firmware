@@ -109,18 +109,6 @@ typedef enum
 	kWarpSensorConfigurationRegisterL3GD20HCTRL2			= 0x21,
 	kWarpSensorConfigurationRegisterL3GD20HCTRL5			= 0x24,
 
-	kWarpSensorConfigurationRegisterBME680Reset			= 0xE0,
-	kWarpSensorConfigurationRegisterBME680Config			= 0x75,
-	kWarpSensorConfigurationRegisterBME680Ctrl_Meas			= 0x74,
-	kWarpSensorConfigurationRegisterBME680Ctrl_Hum			= 0x72,
-	kWarpSensorConfigurationRegisterBME680Ctrl_Gas_1		= 0x71,
-	kWarpSensorConfigurationRegisterBME680Ctrl_Gas_0		= 0x70,
-
-	kWarpSensorConfigurationRegisterBME680CalibrationRegion1Start	= 0x89,
-	kWarpSensorConfigurationRegisterBME680CalibrationRegion1End	= 0xA2,
-	kWarpSensorConfigurationRegisterBME680CalibrationRegion2Start	= 0xE1,
-	kWarpSensorConfigurationRegisterBME680CalibrationRegion2End	= 0xF2,
-
 	/*
 	 *	See Table 4 of the ISL23415 manual. We choose to use the encoding
 	 *	where we always set R4:R0 to 0000
