@@ -70,10 +70,6 @@ typedef enum
 {
 	kWarpSensorMMA8451Q,
 	kWarpSensorINA219,
-	kWarpSensorBME680,
-	kWarpSensorTMP006B,
-	kWarpSensorPAN1326,
-	kWarpSensorSCD30,
 } WarpSensorDevice;
 
 typedef enum
@@ -101,15 +97,6 @@ typedef enum
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_LSB			= 0x06,
 	
 	kWarpSensorOutputRegisterINA219OUT_Current          = 0x04,
-
-	kWarpSensorOutputRegisterBME680press_msb			= 0x1F,
-	kWarpSensorOutputRegisterBME680press_lsb			= 0x20,
-	kWarpSensorOutputRegisterBME680press_xlsb			= 0x21,
-	kWarpSensorOutputRegisterBME680temp_msb				= 0x22,
-	kWarpSensorOutputRegisterBME680temp_lsb				= 0x23,
-	kWarpSensorOutputRegisterBME680temp_xlsb			= 0x24,
-	kWarpSensorOutputRegisterBME680hum_msb				= 0x25,
-	kWarpSensorOutputRegisterBME680hum_lsb				= 0x26,
 
 } WarpSensorOutputRegister;
 
