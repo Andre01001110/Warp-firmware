@@ -148,11 +148,6 @@
 	olatile WarpI2CDeviceState			deviceCCS811State;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVAMG8834)
-	#include "devAMG8834.h"
-	volatile WarpI2CDeviceState			deviceAMG8834State;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVAS7262)
 	#include "devAS7262.h"
 	volatile WarpI2CDeviceState			deviceAS7262State;
@@ -1613,10 +1608,6 @@ main(void)
 		initCCS811(	0x5A	/* i2cAddress */,	&deviceCCS811State,		kWarpDefaultSupplyVoltageMillivoltsCCS811	);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVAMG8834)
-		initAMG8834(	0x68	/* i2cAddress */,	&deviceAMG8834State,		kWarpDefaultSupplyVoltageMillivoltsAMG8834	);
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVAS7262)
 		initAS7262(	0x49	/* i2cAddress */,	&deviceAS7262State,		kWarpDefaultSupplyVoltageMillivoltsAS7262	);
 	#endif
@@ -1907,12 +1898,6 @@ main(void)
 					warpPrint("\r\t- 'g' CCS811			(0x00--0xFF): 1.8V -- 3.6V (compiled out) \n");
 				#endif
 
-				#if (WARP_BUILD_ENABLE_DEVAMG8834)
-					warpPrint("\r\t- 'h' AMG8834			(0x00--?):    3.3V -- 3.3V\n");
-				#else
-					warpPrint("\r\t- 'h' AMG8834			(0x00--?):    3.3V -- 3.3V (compiled out) \n");
-				#endif
-
 				#if (WARP_BUILD_ENABLE_DEVAS7262)
 					warpPrint("\r\t- 'j' AS7262			(0x00--0x2B): 2.7V -- 3.6V\n");
 				#else
@@ -2021,14 +2006,6 @@ main(void)
 					{
 						menuTargetSensor = kWarpSensorCCS811;
 						menuI2cDevice = &deviceCCS811State;
-						break;
-					}
-#endif
-#if (WARP_BUILD_ENABLE_DEVAMG8834)
-					case 'h':
-					{
-						menuTargetSensor = kWarpSensorAMG8834;
-						menuI2cDevice = &deviceAMG8834State;
 						break;
 					}
 #endif
@@ -2542,11 +2519,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 	uint32_t	numberOfConfigErrors = 0;
 
 
-	#if (WARP_BUILD_ENABLE_DEVAMG8834)
-	numberOfConfigErrors += configureSensorAMG8834(	0x3F,/* Initial reset */
-					0x01,/* Frame rate 1 FPS */
-					);
-	#endif
 	#if (WARP_BUILD_ENABLE_DEVMMA8451Q)
 	numberOfConfigErrors += configureSensorMMA8451Q(0x00,/* Payload: Disable FIFO */
 					0x01/* Normal read 8bit, 800Hz, normal, active mode */
@@ -2611,14 +2583,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 	{
 		warpPrint("Measurement number, RTC->TSR, RTC->TPR,\t\t");
 
-		#if (WARP_BUILD_ENABLE_DEVAMG8834)
-		for (uint8_t i = 0; i < 64; i++)
-		{
-			warpPrint(" AMG8834 %d,", i);
-		}
-		warpPrint(" AMG8834 Temp,");
-		#endif
-
 		#if (WARP_BUILD_ENABLE_DEVMMA8451Q)
 			warpPrint(" MMA8451 x, MMA8451 y, MMA8451 z,");
 		#endif
@@ -2654,10 +2618,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 	do
 	{
 		warpPrint("%12u, %12d, %6d,\t\t", readingCount, RTC->TSR, RTC->TPR);
-
-		#if (WARP_BUILD_ENABLE_DEVAMG8834)
-			printSensorDataAMG8834(hexModeFlag);
-		#endif
 
 		#if (WARP_BUILD_ENABLE_DEVMMA8451Q)
 			printSensorDataMMA8451Q(hexModeFlag);
@@ -3167,35 +3127,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tCCS811 Read Aborted. Device Disabled :( ");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorAMG8834:
-		{
-			/*
-			 *	AMG8834: VDD 3.3V -- 3.3V
-			 */
-			#if WARP_BUILD_ENABLE_DEVAMG8834
-				loopForSensor(	"\r\nAMG8834:\n\r",		/*	tagString			*/
-						&readSensorRegisterAMG8834,	/*	readSensorRegisterFunction	*/
-						&deviceAMG8834State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0xFF,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tAMG8834 Read Aborted. Device Disabled :( ");
 			#endif
 
 			break;

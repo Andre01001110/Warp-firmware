@@ -79,7 +79,6 @@ typedef enum
 	kWarpSensorSI4705,
 	kWarpSensorHDC1000,
 	kWarpSensorSI7021,
-	kWarpSensorAMG8834,
 	kWarpSensorCCS811,
 	kWarpSensorPAN1326,
 	kWarpSensorAS7262,
@@ -104,11 +103,7 @@ typedef enum
 	kWarpSensorConfigurationRegisterMAG3110CTRL_REG2		= 0x11,
 
 	kWarpSensorConfigurationRegisterHDC1000Configuration		= 0x02,
-
-	kWarpSensorConfigurationRegisterAMG8834PCTL			= 0x00,
-	kWarpSensorConfigurationRegisterAMG8834RST			= 0x01,
-	kWarpSensorConfigurationRegisterAMG8834FPSC			= 0x02,
-
+	
 	kWarpSensorConfigurationRegisterCCS811MEAS_MODE			= 0x01,
 	kWarpSensorConfigurationRegisterCCS811APP_START			= 0xF4,
 
@@ -161,11 +156,6 @@ typedef enum
 
 	kWarpSensorOutputRegisterHDC1000Temperature			= 0x00,
 	kWarpSensorOutputRegisterHDC1000Humidity			= 0x01,
-
-	kWarpSensorOutputRegisterAMG8834TTHL				= 0x0E,
-	kWarpSensorOutputRegisterAMG8834TTHH				= 0x0F,
-	kWarpSensorOutputRegisterAMG8834T01L				= 0x80,
-	kWarpSensorOutputRegisterAMG8834T64H				= 0xFF,
 
 	kWarpSensorOutputRegisterCCS811ALG_DATA				= 0x02,
 	kWarpSensorOutputRegisterCCS811RAW_DATA				= 0x03,
