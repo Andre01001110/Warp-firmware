@@ -44,7 +44,6 @@
 #if (WARP_BUILD_ENABLE_FRDMKL03)
 	#define		WARP_BUILD_ENABLE_DEVMMA8451Q		1
 	#define		WARP_BUILD_ENABLE_DEVRV8803C7		0
-	#define		WARP_BUILD_ENABLE_DEVTCS34725		0
 	#define     WARP_BUILD_ENABLE_DEVSSD1331    1
 	#define     WARP_BUILD_ENABLE_DEVINA219     1
 #endif
@@ -86,6 +85,5 @@ typedef enum
 	kWarpDefaultSupplyVoltageMillivoltsLPS25H		= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsMAG3110		= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsL3GD20H		= 1800,
-	kWarpDefaultSupplyVoltageMillivoltsTCS34725		= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsRV8803C7		= 1800,
 } WarpDefaults;

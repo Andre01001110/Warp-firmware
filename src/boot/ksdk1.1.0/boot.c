@@ -83,11 +83,6 @@
 	volatile WarpI2CDeviceState			deviceMMA8451QState;
 #endif
 
-#if (WARP_BUILD_ENABLE_DEVTCS34725)
-	#include "devTCS34725.h"
-	volatile WarpI2CDeviceState			deviceTCS34725State;
-#endif
-
 #if (WARP_BUILD_ENABLE_DEVRV8803C7)
 	#include "devRV8803C7.h"
 	volatile WarpI2CDeviceState			deviceRV8803C7State;
@@ -280,15 +275,8 @@ sleepUntilReset(void)
 {
 	while (1)
 	{
-		#if (WARP_BUILD_ENABLE_DEVSI4705)
-			GPIO_DRV_SetPinOutput(kWarpPinSI4705_nRST);
-		#endif
 
 		warpLowPowerSecondsSleep(1, false /* forceAllPinsIntoLowPowerState */);
-
-		#if (WARP_BUILD_ENABLE_DEVSI4705)
-			GPIO_DRV_ClearPinOutput(kWarpPinSI4705_nRST);
-		#endif
 
 		warpLowPowerSecondsSleep(60, true /* forceAllPinsIntoLowPowerState */);
 	}
@@ -1336,10 +1324,6 @@ main(void)
 		initINA219(	0x40	/* i2cAddress */, kWarpDefaultSupplyVoltageMillivoltsINA219);
 	#endif
 
-	#if (WARP_BUILD_ENABLE_DEVTCS34725)
-		initTCS34725(	0x29	/* i2cAddress */,	&deviceTCS34725State,		kWarpDefaultSupplyVoltageMillivoltsTCS34725	);
-	#endif
-
 	#if (WARP_BUILD_ENABLE_DEVRV8803C7)
 		initRV8803C7(	0x32	/* i2cAddress */,					kWarpDefaultSupplyVoltageMillivoltsRV8803C7	);
 		status = setRTCCountdownRV8803C7(0 /* countdown */, kWarpRV8803ExtTD_1HZ /* frequency */, false /* interupt_enable */);
@@ -1486,12 +1470,6 @@ main(void)
 					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V (compiled out) \n");
 				#endif
 
-				#if (WARP_BUILD_ENABLE_DEVTCS34725)
-					warpPrint("\r\t- 'd' TCS34725			(0x00--0x1D): 2.7V -- 3.3V\n");
-				#else
-					warpPrint("\r\t- 'd' TCS34725			(0x00--0x1D): 2.7V -- 3.3V (compiled out) \n");
-				#endif
-
 				warpPrint("\r\tEnter selection>");
 				key = warpWaitKey();
 				warpPrint("\r\n");
@@ -1513,14 +1491,6 @@ main(void)
 					{
 						menuTargetSensor = kWarpSensorINA219;
 						menuI2cDevice = &deviceINA219State;
-						break;
-					}
-#endif
-#if (WARP_BUILD_ENABLE_DEVTCS34725)
-					case 'd':
-					{
-						menuTargetSensor = kWarpSensorTCS34725;
-						menuI2cDevice = &deviceTCS34725State;
 						break;
 					}
 #endif
@@ -2278,35 +2248,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tINA219 Read Aborted. Device Disabled :(");
-			#endif
-
-			break;
-		}
-
-		case kWarpSensorTCS34725:
-		{
-			/*
-			 *	TCS34725: VDD 2.7V -- 3.3V
-			 */
-			#if WARP_BUILD_ENABLE_DEVTCS34725
-				loopForSensor(	"\r\nTCS34725:\n\r",		/*	tagString			*/
-						&readSensorRegisterTCS34725,	/*	readSensorRegisterFunction	*/
-						&deviceTCS34725State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x1D,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tTCS34725 Read Aborted. Device Disabled :( ");
 			#endif
 
 			break;
