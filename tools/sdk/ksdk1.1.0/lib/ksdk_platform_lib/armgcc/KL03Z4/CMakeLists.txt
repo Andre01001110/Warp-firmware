@@ -4,6 +4,8 @@ INCLUDE(CMakeForceCompiler)
 SET(CMAKE_SYSTEM_NAME Generic)
 CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
 
+project(platform_lib)
+
 # THE VERSION NUMBER
 SET (Tutorial_VERSION_MAJOR 1)
 SET (Tutorial_VERSION_MINOR 0)

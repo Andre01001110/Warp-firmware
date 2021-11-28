@@ -84,7 +84,7 @@ devSSD1331init(void)
 	 *
 	 *	Reconfigure to use as GPIO.
 	 */
-	PORT_HAL_SetMuxMode(PORTB_BASE, 13u, kPortMuxAsGpio);
+	PORT_HAL_SetMuxMode(PORTB_BASE, 11u, kPortMuxAsGpio);
 	PORT_HAL_SetMuxMode(PORTA_BASE, 12u, kPortMuxAsGpio);
 	PORT_HAL_SetMuxMode(PORTB_BASE, 0u, kPortMuxAsGpio);
 
@@ -131,7 +131,7 @@ devSSD1331init(void)
 	writeCommand(kSSD1331CommandVCOMH);		// 0xBE
 	writeCommand(0x3E);
 	writeCommand(kSSD1331CommandMASTERCURRENT);	// 0x87
-	writeCommand(0x06);
+	writeCommand(0x0F);
 	writeCommand(kSSD1331CommandCONTRASTA);		// 0x81
 	writeCommand(0x91);
 	writeCommand(kSSD1331CommandCONTRASTB);		// 0x82
@@ -162,16 +162,99 @@ devSSD1331init(void)
 	 */
 	//...
 	writeCommand(0x22);
+	
 	writeCommand(0x00);
 	writeCommand(0x00);
-	writeCommand(95);
-	writeCommand(63);
+	
+	writeCommand(0x5F);
+	writeCommand(0x3F);
+	
 	writeCommand(0x00);
 	writeCommand(0xFF);
 	writeCommand(0x00);
+	
 	writeCommand(0x00);
 	writeCommand(0xFF);
 	writeCommand(0x00);
 
 	return 0;
 }
+
+int
+devSSD1331clear(void)
+{
+	writeCommand(kSSD1331CommandCLEAR);
+	writeCommand(0x00);
+	writeCommand(0x00);
+	writeCommand(0x5F);
+	writeCommand(0x3F);
+
+	return 0;
+}
+
+int
+devSSD1331red(void)
+{
+	writeCommand(0x22);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	
+	writeCommand(0x5F);
+	writeCommand(0x3F);
+	
+	writeCommand(0xFF);
+	writeCommand(0x00);
+	writeCommand(0x00);
+	
+	writeCommand(0xFF);
+	writeCommand(0x00);
+	writeCommand(0x00);
+
+	return 0;
+}
+
+int
+devSSD1331blue(void)
+{
+	writeCommand(0x22);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	
+	writeCommand(0x5F);
+	writeCommand(0x3F);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	writeCommand(0xFF);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	writeCommand(0xFF);
+
+	return 0;
+}
+
+int
+devSSD1331green(void)
+{
+	writeCommand(0x22);
+	
+	writeCommand(0x00);
+	writeCommand(0x00);
+	
+	writeCommand(0x5F);
+	writeCommand(0x3F);
+	
+	writeCommand(0x00);
+	writeCommand(0xFF);
+	writeCommand(0x00);
+	
+	writeCommand(0x00);
+	writeCommand(0xFF);
+	writeCommand(0x00);
+
+	return 0;
+}
+
