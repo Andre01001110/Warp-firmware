@@ -8,9 +8,11 @@ First, edit [setup.conf](setup.conf) to set the variable `ARMGCC_DIR` and `JLINK
 
 Second, edit [`tools/scripts/glaux.jlink.commands`](tools/scripts/glaux.jlink.commands) and [`tools/scripts/warp.jlink.commands`](tools/scripts/warp.jlink.commands) to replace `<full-path-to-warp-firmware>` with the full path to your Warp firmware directory.
 
-You can erase any existing build, begin a new build, and load it onto to board with a single command
+You can erase any existing build, begin a new build, and load it onto to board with a single command.
 
 	make full
+
+Other make commands that break the process down into smaller steps can be found within the Makefile.
 
 The build process copies files from `src/boot/ksdk1.1.0/` into the `build/`, builds, and converts the binary to SREC. See `Warp/src/boot/ksdk1.1.0/README.md` for more. _When editing source, edit the files in `src/boot/ksdk1.1.0/`, not the files in `build` location, since the latter are overwritten during each build._
 
