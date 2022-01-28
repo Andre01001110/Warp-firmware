@@ -132,7 +132,8 @@ By default is is configured to run indefinitely, but this can be changed to inst
 	warpPrint("\r\tDone.\n\n");
 ```
 ----
-This code was modified from the [Warp Firmware provided here](https://github.com/physical-computation/Warp-firmware) by Andre Nowaczek of Downing College, Cambridge. CRSid: an545.
+
+This code was modified from the [Warp Firmware provided here](https://github.com/physical-computation/Warp-firmware) by Andre Nowaczek of Downing College, Cambridge. CRSid: an545. The majority of drivers were removed. devMMA8451Q and boot files were modifed. devSSD1331 files are entirely my own work.
 
 ----
 
