@@ -1,5 +1,5 @@
-# Baseline firmware for the [Warp](https://github.com/physical-computation/Warp-hardware) family of hardware platforms
-This is the firmware for the [Warp hardware](https://github.com/physical-computation/Warp-hardware) and its publicly available and unpublished derivatives. This firmware also runs on the Freescale/NXP FRDM KL03 evaluation board which we use for teaching at the University of Cambridge. When running on platforms other than Warp, only the sensors available in the corresponding hardware platform are accessible.
+# Introduction
+This branch contains code that runs on the FRDM-KL03Z platform. It also requires that you have an OLED breakout board using the SSD1331 Driver Chip attached. The purpose of this code is to read the acceleration from the built-in accelerometer and then visualise this on the OLED with a meter. This is particularly useful for applications where the numerical value of the acceleration is not helpful.
 
 **Prerequisites:** You need an arm cross-compiler such as `arm-none-eabi-gcc` installed as well as a working `cmake` (installed, e.g., via `apt-get` on Linux or via [MacPorts](https://www.macports.org) on macOS). On Ubuntu, the package you need is `gcc-arm-none-eabi`. You will also need an installed copy of the SEGGER [JLink commander](https://www.segger.com/downloads/jlink/), `JlinkExe`, which is available for Linux, macOS, and Windows (here are direct links for downloading it for [macOS](https://www.segger.com/downloads/jlink/JLink_MacOSX.pkg), and [Linux tgz 64-bit](https://www.segger.com/downloads/jlink/JLink_Linux_x86_64.tgz)).
 
@@ -8,15 +8,11 @@ First, edit [setup.conf](setup.conf) to set the variable `ARMGCC_DIR` and `JLINK
 
 Second, edit [`tools/scripts/glaux.jlink.commands`](tools/scripts/glaux.jlink.commands) and [`tools/scripts/warp.jlink.commands`](tools/scripts/warp.jlink.commands) to replace `<full-path-to-warp-firmware>` with the full path to your Warp firmware directory.
 
-Third, build the Warp firmware by
+You can erase any existing build, begin a new build, and load it onto to board with a single command.
 
-	make warp
+	make full
 
-Fourth, load the Warp firmware to hardware by
-
-	make load-warp
-
-To build for the Glaux variant, use `make glaux` and `make load-glaux` in steps three and four instead.
+Other make commands that break the process down into smaller steps can be found within the Makefile.
 
 The build process copies files from `src/boot/ksdk1.1.0/` into the `build/`, builds, and converts the binary to SREC. See `Warp/src/boot/ksdk1.1.0/README.md` for more. _When editing source, edit the files in `src/boot/ksdk1.1.0/`, not the files in `build` location, since the latter are overwritten during each build._
 
@@ -31,26 +27,30 @@ To build the Warp firmware for the FRDM KL03, you will need to modify [this line
 
 
 ## 3.  Editing the firmware
-The firmware is currently all in `src/boot/ksdk1.1.0/`, in particular, see `src/boot/ksdk1.1.0/warp-kl03-ksdk1.1-boot.c` and the per-sensor drivers in `src/boot/ksdk1.1.0/dev*.[c,h]`.
+The firmware is currently all in `src/boot/ksdk1.1.0/`, in particular, see `src/boot/ksdk1.1.0/boot.c` and the per-sensor drivers in `src/boot/ksdk1.1.0/dev*.[c,h]`.
 
 The firmware builds on the Kinetis SDK. You can find more documentation on the Kinetis SDK in the document [doc/Kinetis SDK v.1.1 API Reference Manual.pdf](https://github.com/physical-computation/Warp-firmware/blob/master/doc/Kinetis%20SDK%20v.1.1%20API%20Reference%20Manual.pdf).
 
-The firmware is designed for the Warp and Glaux hardware platforms, but will also run on the Freescale FRDM KL03 development board. In that case, the only sensor driver which is relevant is the one for the MMA8451Q. For more details about the structure of the firmware, see [src/boot/ksdk1.1.0/README.md](src/boot/ksdk1.1.0/README.md).
+The boot.c file contains an interactable menu that allows the user to control what the board does. The MMA8451Q file contains functions pertaining to the accelerometer, including it's initialisation function. The SSD1331 file contains similar functions.
+
+The particular functions relevant to the operation of this device as a force visualiser are the displayArrow() function in boot.c and the two functions used within, getSensorDataMMA8451Q(&x, &y, &z) and devSSD1331arrow(x, y, z), from the MMA8451Q and SSD1331 files respectively.
+
+The function you will be most likely to want to modify is devSSD1331arrow(x, y, z). This function receives the raw sensor data and performs all the neccesary processing and drawing functions. The drawing functions have the greatest computational cost and care should be taken to minimise their impact on the programme.
 
 ## 4.  Interacting with the boot menu
 When the firmware boots, you will be dropped into a menu with a rich set of commands. The Warp boot menu allows you to conduct most of the experiments you will likely need without modifying the firmware:
 ````
-[ *				W	a	r	p	(rev. b)			* ]
+[ *				        Warp (HW revision C)    				* ]
 [  				      Cambridge / Physcomplab   				  ]
 
-	Supply=0mV,	Default Target Read Register=0x00
-	I2C=200kb/s,	SPI=200kb/s,	UART=1kb/s,	I2C Pull-Up=32768
+	Supply=1800mV,	Default Target Read Register=0x00
+	I2C=200kb/s,	SPI=10000kb/s,	UART=115200b/s,	I2C Pull-Up=0
 
-	SIM->SCGC6=0x20000001		RTC->SR=0x10		RTC->TSR=0x5687132B
+	SIM->SCGC6=0x20000001		RTC->SR=0x10		RTC->TSR=0x5687131D
 	MCG_C1=0x42			MCG_C2=0x00		MCG_S=0x06
 	MCG_SC=0x00			MCG_MC=0x00		OSC_CR=0x00
 	SMC_PMPROT=0x22			SMC_PMCTRL=0x40		SCB->SCR=0x00
-	PMC_REGSC=0x00			SIM_SCGC4=0xF0000030	RTC->TPR=0xEE9
+	PMC_REGSC=0x00			SIM_SCGC4=0xF0400030	RTC->TPR=0x651F
 
 	0s in RTC Handler to-date,	0 Pmgr Errors
 Select:
@@ -60,22 +60,20 @@ Select:
 - 'd': set UART baud rate.
 - 'e': set default register address.
 - 'f': write byte to sensor.
-- 'g': set default SSSUPPLY.
-- 'h': powerdown command to all sensors.
 - 'i': set pull-up enable value.
-- 'j': repeat read reg 0x00 on sensor #3.
+- 'j': repeat read reg 0x00 on sensor #0.
 - 'k': sleep until reset.
 - 'l': send repeated byte on I2C.
 - 'm': send repeated byte on SPI.
-- 'n': enable SSSUPPLY.
-- 'o': disable SSSUPPLY.
+- 'n': enable sensor supply voltage.
+- 'o': disable sensor supply voltage.
 - 'p': switch to VLPR mode.
 - 'r': switch to RUN mode.
-- 's': power up all sensors.
 - 't': dump processor state.
 - 'u': set I2C address.
 - 'x': disable SWD and spin for 10 secs.
-- 'z': dump all sensors data.
+- 'y': OLED Menu.
+- 'z': dump all sensor data.
 Enter selection>
 ````
 ### Double echo characters
@@ -83,56 +81,67 @@ By default on Unix, you will likely see characters you enter shown twice. To avo
 - Make sure you are running `bash` (and not `csh`)
 - Execute `stty -echo` at the command line in the terminal window in which you will run the `JLinkRTTClient`.
 
-### Introduction to using the menu
-You can probe around the menu to figure out what to do. In brief, you will likely want:
-
-1. Menu item `b` to set the I2C baud rate.
-
-2. Menu item `r` to switch the processor from low-power mode (2MHz) to "run" mode (48MHz).
-
-3. Menu item `g` to set sensor supply voltage.
-
-4. Menu item `n` to turn on the voltage regulators.
-
-5. Menu item `z` to repeatedly read from all the sensors whose drivers are compiled into the build.
+### Introduction to using the menu and testing the OLED
+The menu contains all the functions you need for the device to work out of the box. Of particular note is the OLED Menu, which can be accessed with the `y` key. You should fine the following menu.
+```
+	Select:
+	- '0' Clear Screen
+	- 'a' Enable Arrow
+	- 'r' Red Rectangle
+	- 'g' Green Rectangle
+	- 'b' Blue Rectangle
+	- 'y' Initialise OLED
+	Enter selection> 
+```
+There are built-in programmes to change the colour of the screen to Red, Green, or Blue - which you may use to test that your hardware is configured correctly. Commands are also included to clear (turn off) the screen and re-initialise it. On powerup, and when initilaised again, the screen will display bright green.
 
 *NOTE: In many cases, the menu expects you to type a fixed number of characters (e.g., 0000 or 0009 for zero and nine)<sup>&nbsp;<a href="#Notes">See note 1 below</a></sup>. If using the `JLinkRTTClient`, the menu interface eats your characters as you type them, and you should not hit RETURN after typing in text. On the other hand, if using `telnet` you have to hit return.*
 
 If you see repeated characters, you can set your terminal to not echo typed characters using `stty -echo`.
 
-### Example 1: Dump all registers for a single sensor
--	`b` (set the I2C baud rate to `0300` for 300 kb/s).
--	`g` (set sensor supply voltage to `3000` for 3000mV sensor supply voltage).
--	`n` (turn on the sensor supply regulators).
--	`j` (submenu for initiating a fixed number of repeated reads from a sensor):
-````
-Enter selection> j
+## 5.  Using the Force Visualiser
+The force visualiser can be actiavted with option `a` in the OLED Menu:
+```
+	Select:
+	- '0' Clear Screen
+	- 'a' Enable Arrow
+	- 'r' Red Rectangle
+	- 'g' Green Rectangle
+	- 'b' Blue Rectangle
+	- 'y' Initialise OLED
+	Enter selection> 
+```
+By default is is configured to run indefinitely, but this can be changed to instead allow the user to select a variety of parameters before the programme begins running. The relevant section of the boot.c file is below. Uncommenting all the commented regions and then commenting the currently active displayArrow() call will enable this functionality.
+```
+	/*
+	bool		outputFlag;
+    
+	warpPrint("\r\n\tOutput Readings? ('y' or 'n')> ");
+	key = warpWaitKey();
+	outputFlag = (key == 'y' ? 1 : 0);
 
-    Auto-increment from base address 0x01? ['0' | '1']> 0
-    Chunk reads per address (e.g., '1')> 1
-    Chatty? ['0' | '1']> 1
-    Inter-operation spin delay in milliseconds (e.g., '0000')> 0000
-    Repetitions per address (e.g., '0000')> 0000
-    Maximum voltage for adaptive supply (e.g., '0000')> 2500
-    Reference byte for comparisons (e.g., '3e')> 00
-````
+    	warpPrint("\r\n\tNumber of readings? (e.g., '1234')> ");
+	uint16_t	loopLength = read4digits();
 
-### Example 2: Stream data from all sensors
-This will perpetually stream data from the 90+ sensor dimensions at a rate of about 90-tuples per second. Use the following command sequence:
--	`b` (set the I2C baud rate to `0300` for 300 kb/s).
--	`r` (enable 48MHz "run" mode for the processor).
--	`g` (set sensor supply voltage to `3000` for 3000mV sensor supply voltage).
--	`n` (turn on the sensor supply regulators).
--	`z` (start to stream data from all sensors that can run at the chosen voltage and baud rate).
+	warpPrint("\r\n\tSet the time delay between each run in milliseconds (e.g., '1234')> ");
+	uint16_t	menuDelayBetweenEachRun = read4digits();
+	*/
 
-## 5.  To update your fork
-From your local clone:
 
-	git remote add upstream https://github.com/physical-computation/Warp-firmware.git
-	git fetch upstream
-	git pull upstream master
+	warpPrint("\r\n\tEnabling Arrow...\n");
+	//displayArrow(menuDelayBetweenEachRun, false /* loopForever */, loopLength, outputFlag);
+	displayArrow(0, true /* loopForever */, 500, 1);
+	warpPrint("\r\tDone.\n\n");
+```
+The default orientation of the board is lying flat with the mini USB port on the top and at the far end. The screen should be oriented so that the negative x direction corresponds to a down (in the direction of gravity) force.
 
 ----
+
+This code was modified from the [Warp Firmware provided here](https://github.com/physical-computation/Warp-firmware) by Andre Nowaczek of Downing College, Cambridge. CRSid: an545. The majority of drivers were removed. devMMA8451Q and boot files were modifed. devSSD1331 files are entirely my own work.
+
+----
+
+## Warp Acknowledgements
 
 ### If you use Warp in your research, please cite it as:
 Phillip Stanley-Marbell and Martin Rinard. “A Hardware Platform for Efficient Multi-Modal Sensing with Adaptive Approximation”. ArXiv e-prints (2018). arXiv:1804.09241.
