@@ -1703,7 +1703,7 @@ main(void)
 				        
 						warpPrint("\r\n\tEnabling Arrow...\n");
 						//displayArrow(menuDelayBetweenEachRun, false /* loopForever */, loopLength, outputFlag);
-						displayArrow(0, false /* loopForever */, 500, 1);
+						displayArrow(0, true /* loopForever */, 500, 1);
 						warpPrint("\r\tDone.\n\n");
 						
 				        break;
