@@ -239,21 +239,141 @@ devSSD1331blue(void)
 int
 devSSD1331green(void)
 {
-	writeCommand(0x22);
+	writeCommand(0x22); // Draw Rectangle
 	
+	writeCommand(0x00); // Start Row
+	writeCommand(0x00); // Start Column
+	
+	writeCommand(0x5F); // End Row, 0 to 95
+	writeCommand(0x3F); // End Column, 0 to 63
+	
+	writeCommand(0x00); // Border R
+	writeCommand(0xFF); // Border G
+	writeCommand(0x00); // Border B
+	
+	writeCommand(0x00); // Fill R
+	writeCommand(0xFF); // Fill G
+	writeCommand(0x00); // Fill B
+
+	return 0;
+}
+
+int
+devSSD1331initarrow(void)
+{
+
+    //clear screen
+	writeCommand(kSSD1331CommandCLEAR);
 	writeCommand(0x00);
 	writeCommand(0x00);
-	
 	writeCommand(0x5F);
 	writeCommand(0x3F);
+
+	writeCommand(0x22); // Draw Rectangle
 	
-	writeCommand(0x00);
-	writeCommand(0xFF);
-	writeCommand(0x00);
+	writeCommand(0x00); // Start Row
+	writeCommand(0x16); // Start Column
 	
-	writeCommand(0x00);
-	writeCommand(0xFF);
-	writeCommand(0x00);
+	writeCommand(0x5F); // End Row, 0 to 95
+	writeCommand(0x29); // End Column, 0 to 63
+	
+	writeCommand(0xFF); // Border R
+	writeCommand(0xFF); // Border G
+	writeCommand(0xFF); // Border B
+	
+	writeCommand(0x00); // Fill R
+	writeCommand(0x00); // Fill G
+	writeCommand(0x00); // Fill B
+
+	return 0;
+}
+
+int
+devSSD1331arrow(int x, int y, int z)
+{
+    
+    z = z-4096; //remove gravity
+	
+	//calculate arrow size
+	int length = 47;
+	length = z/500 * length;
+	if (length > 47){
+	    length=47;
+    }else if (length < -47){
+        length=-47;
+    }
+	
+
+    if (length > 0) //going down
+    {
+	    
+	    //clear opposite direction
+	    writeCommand(kSSD1331CommandCLEAR);
+	    writeCommand(0x30);
+	    writeCommand(0x17);
+	    writeCommand(0x5E);
+	    writeCommand(0x28);
+	    
+        //draw arrow
+        writeCommand(0x22);
+        
+        writeCommand(48 - length);
+        writeCommand(0x17);
+        
+        writeCommand(0x2F);
+        writeCommand(0x28);
+        
+        writeCommand(0x00);
+        writeCommand(0xFF);
+        writeCommand(0x00);
+        
+        writeCommand(0x00);
+        writeCommand(0xFF);
+        writeCommand(0x00);
+        
+        //clear beyond arrow
+	    writeCommand(kSSD1331CommandCLEAR);
+	    writeCommand(0x01);
+	    writeCommand(0x17);
+	    writeCommand(48-length);
+	    writeCommand(0x28);        
+	    
+    }else{
+	    
+	    //clear opposite direction
+	    writeCommand(kSSD1331CommandCLEAR);
+	    writeCommand(0x01);
+	    writeCommand(0x17);
+	    writeCommand(0x2F);
+	    writeCommand(0x28);
+        
+        //draw arrow
+        writeCommand(0x22);
+        
+        writeCommand(0x30);
+        writeCommand(0x17);
+        
+        writeCommand(48 - length);
+        writeCommand(0x28);
+    
+        writeCommand(0x00);
+        writeCommand(0xFF);
+        writeCommand(0x00);
+        
+        writeCommand(0x00);
+        writeCommand(0xFF);
+        writeCommand(0x00);
+        
+        //clear beyond arrow
+	    writeCommand(kSSD1331CommandCLEAR);
+	    writeCommand(48-length);
+	    writeCommand(0x17);
+	    writeCommand(0x5E);
+	    writeCommand(0x28);        
+    }
+    
+
+    
 
 	return 0;
 }

@@ -69,7 +69,6 @@ typedef enum
 typedef enum
 {
 	kWarpSensorMMA8451Q,
-	kWarpSensorINA219,
 } WarpSensorDevice;
 
 typedef enum
@@ -81,9 +80,6 @@ typedef enum
 {
 	kWarpSensorConfigurationRegisterMMA8451QF_SETUP			= 0x09,
 	kWarpSensorConfigurationRegisterMMA8451QCTRL_REG1		= 0x2A,
-
-    kWarpSensorConfigurationRegisterINA219CONFIG			= 0x00,
-	kWarpSensorConfigurationRegisterINA219CALIBRATE		    = 0x05,
 	
 } WarpSensorConfigurationRegister;
 
@@ -95,8 +91,6 @@ typedef enum
 	kWarpSensorOutputRegisterMMA8451QOUT_Y_LSB			= 0x04,
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_MSB			= 0x05,
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_LSB			= 0x06,
-	
-	kWarpSensorOutputRegisterINA219OUT_Current          = 0x04,
 
 } WarpSensorOutputRegister;
 

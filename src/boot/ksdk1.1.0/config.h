@@ -45,7 +45,6 @@
 	#define		WARP_BUILD_ENABLE_DEVMMA8451Q		1
 	#define		WARP_BUILD_ENABLE_DEVRV8803C7		0
 	#define     WARP_BUILD_ENABLE_DEVSSD1331    1
-	#define     WARP_BUILD_ENABLE_DEVINA219     1
 #endif
 
 typedef enum
@@ -81,6 +80,5 @@ typedef enum
 	 */
 	kWarpDefaultSupplyVoltageMillivolts			= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsMMA8451Q		= 1800,
-	kWarpDefaultSupplyVoltageMillivoltsINA219		= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsRV8803C7		= 1800,
 } WarpDefaults;

@@ -71,11 +71,7 @@
 #if (WARP_BUILD_ENABLE_DEVSSD1331)
 	#include "devSSD1331.h"
 	volatile WarpSPIDeviceState			deviceSSD1331State;
-#endif
-
-#if (WARP_BUILD_ENABLE_DEVINA219)
-	#include "devINA219.h"
-	volatile WarpI2CDeviceState			deviceINA219State;
+	volatile bool						deviceSSD1331EnableArrow			= false;
 #endif
 
 #if (WARP_BUILD_ENABLE_DEVMMA8451Q)
@@ -130,6 +126,7 @@ static int						char2int(int character);
 static uint8_t						readHexByte(void);
 static int						read4digits(void);
 static void						printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelayBetweenEachRun, bool loopForever, int loopLength);
+static void						displayArrow(int menuDelayBetweenEachRun, bool loopForever, int loopLength, bool outputFlag);
 
 /*
  *	TODO: change the following to take byte arrays
@@ -1176,10 +1173,6 @@ main(void)
 //		initMMA8451Q(	0x1C	/* i2cAddress */,	&deviceMMA8451QState,		kWarpDefaultSupplyVoltageMillivoltsMMA8451Q	);
 		initMMA8451Q(	0x1D	/* i2cAddress */,		kWarpDefaultSupplyVoltageMillivoltsMMA8451Q	);
 	#endif
-	
-	#if (WARP_BUILD_ENABLE_DEVINA219)
-		initINA219(	0x40	/* i2cAddress */, kWarpDefaultSupplyVoltageMillivoltsINA219);
-	#endif
 
 	#if (WARP_BUILD_ENABLE_DEVRV8803C7)
 		initRV8803C7(	0x32	/* i2cAddress */,					kWarpDefaultSupplyVoltageMillivoltsRV8803C7	);
@@ -1321,12 +1314,6 @@ main(void)
 					warpPrint("\r\t- '5' MMA8451Q			(0x00--0x31): 1.95V -- 3.6V (compiled out) \n");
 				#endif
 				
-				#if (WARP_BUILD_ENABLE_DEVINA219)
-					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V\n");
-				#else
-					warpPrint("\r\t- 'c' INA219			(0x00--0x05): 3.0V -- 5.5V (compiled out) \n");
-				#endif
-
 				warpPrint("\r\tEnter selection>");
 				key = warpWaitKey();
 				warpPrint("\r\n");
@@ -1343,14 +1330,6 @@ main(void)
 						}
 					#endif
 
-#if (WARP_BUILD_ENABLE_DEVINA219)
-					case 'c':
-					{
-						menuTargetSensor = kWarpSensorINA219;
-						menuI2cDevice = &deviceINA219State;
-						break;
-					}
-#endif
 					default:
 					{
 						warpPrint("\r\tInvalid selection '%c' !\n", key);
@@ -1687,6 +1666,7 @@ main(void)
 			{
 			    warpPrint("\r\tSelect:\n");
 				warpPrint("\r\t- '0' Clear Screen\n");
+				warpPrint("\r\t- 'a' Enable Arrow\n");
 				warpPrint("\r\t- 'r' Red Rectangle\n");
 				warpPrint("\r\t- 'g' Green Rectangle\n");
 				warpPrint("\r\t- 'b' Blue Rectangle\n");
@@ -1702,6 +1682,30 @@ main(void)
 						warpPrint("\r\n\tClearing OLED...\n");
 				        devSSD1331clear();
 				        warpPrint("\r\tDone.\n\n");
+				        break;
+					}
+					
+					case 'a':
+					{
+					    /*
+					    bool		outputFlag;
+					
+					    warpPrint("\r\n\tOutput Readings? ('y' or 'n')> ");
+				        key = warpWaitKey();
+				        outputFlag = (key == 'y' ? 1 : 0);
+					    
+					    warpPrint("\r\n\tNumber of readings? (e.g., '1234')> ");
+				        uint16_t	loopLength = read4digits();
+				        
+				        warpPrint("\r\n\tSet the time delay between each run in milliseconds (e.g., '1234')> ");
+				        uint16_t	menuDelayBetweenEachRun = read4digits();
+				        */
+				        
+						warpPrint("\r\n\tEnabling Arrow...\n");
+						//displayArrow(menuDelayBetweenEachRun, false /* loopForever */, loopLength, outputFlag);
+						displayArrow(0, false /* loopForever */, 500, 1);
+						warpPrint("\r\tDone.\n\n");
+						
 				        break;
 					}
 					
@@ -1833,6 +1837,66 @@ main(void)
 	return 0;
 }
 
+void
+displayArrow(int menuDelayBetweenEachRun, bool loopForever, int loopLength, bool outputFlag)
+{
+
+    uint32_t	readingCount = 0;
+    bool        loopFlag = true;
+    uint32_t	numberOfConfigErrors = 0;
+    
+	int x=0, y=0, z=0;
+
+	numberOfConfigErrors += configureSensorMMA8451Q(0x00,/* Payload: Disable FIFO */
+					0x01/* Normal read 8bit, 800Hz, normal, active mode */
+					);
+    
+    if (outputFlag)
+    {
+    
+	    warpPrint("Measurement number,\t\t");
+	    warpPrint(" MMA8451 x, MMA8451 y, MMA8451 z,");
+	    warpPrint("\n\n");
+	    
+    }
+    
+    devSSD1331initarrow();
+
+	do
+	{
+	
+	if (outputFlag)
+	{
+	    warpPrint("%12u,\t\t", readingCount);
+	    printSensorDataMMA8451Q(0);
+	    warpPrint("\n");
+	    
+    }
+
+    getSensorDataMMA8451Q(&x, &y, &z);
+
+	devSSD1331arrow(x, y, z);
+	
+	if (menuDelayBetweenEachRun > 0)
+	{
+		OSA_TimeDelay(menuDelayBetweenEachRun);
+	}
+	
+	if (!(loopForever))
+	{
+	
+	    readingCount++;
+		    
+	    if (readingCount > loopLength)
+	    {
+		    loopFlag = 0;
+	    }
+	    
+    }
+	   			
+	} while (loopFlag);
+}
+
 
 
 void
@@ -1850,13 +1914,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 					0x01/* Normal read 8bit, 800Hz, normal, active mode */
 					);
 	#endif
-	#if (WARP_BUILD_ENABLE_DEVINA219)
-	numberOfConfigErrors += configureSensorINA219(  0x01, /* Payload: Config MSB */
-					                                0x9F, /* Payload: Config LSB */
-					                                0x10, /* Payload: Calibrate MSB */
-					                                0x00 /* Payload: Calibrate LSB */
-					                                );
-	#endif
 
 	if (printHeadersAndCalibration)
 	{
@@ -1864,10 +1921,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 
 		#if (WARP_BUILD_ENABLE_DEVMMA8451Q)
 			warpPrint(" MMA8451 x, MMA8451 y, MMA8451 z,");
-		#endif
-		
-		#if (WARP_BUILD_ENABLE_DEVINA219)
-			warpPrint(" INA219 Current,");
 		#endif
 
 		warpPrint(" RTC->TSR, RTC->TPR, # Config Errors");
@@ -1880,10 +1933,6 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 
 		#if (WARP_BUILD_ENABLE_DEVMMA8451Q)
 			printSensorDataMMA8451Q(hexModeFlag);
-		#endif
-		
-		#if (WARP_BUILD_ENABLE_DEVINA219)
-			printSensorDataINA219(hexModeFlag);
 		#endif
 
 		warpPrint(" %12d, %6d, %2u\n", RTC->TSR, RTC->TPR, numberOfConfigErrors);
@@ -2076,35 +2125,6 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 						);
 			#else
 				warpPrint("\r\n\tMMA8451Q Read Aborted. Device Disabled :(");
-			#endif
-
-			break;
-		}
-		
-		case kWarpSensorINA219:
-		{
-			/*
-			 *	INA219: VDD 3.0--5.5
-			 */
-			#if (WARP_BUILD_ENABLE_DEVINA219)
-				loopForSensor(	"\r\nINA219:\n\r",		/*	tagString			*/
-						&readSensorRegisterINA219,	/*	readSensorRegisterFunction	*/
-						&deviceINA219State,		/*	i2cDeviceState			*/
-						NULL,				/*	spiDeviceState			*/
-						baseAddress,			/*	baseAddress			*/
-						0x00,				/*	minAddress			*/
-						0x05,				/*	maxAddress			*/
-						repetitionsPerAddress,		/*	repetitionsPerAddress		*/
-						chunkReadsPerAddress,		/*	chunkReadsPerAddress		*/
-						spinDelay,			/*	spinDelay			*/
-						autoIncrement,			/*	autoIncrement			*/
-						sssupplyMillivolts,		/*	sssupplyMillivolts		*/
-						referenceByte,			/*	referenceByte			*/
-						adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
-						chatty				/*	chatty				*/
-						);
-			#else
-				warpPrint("\r\n\tINA219 Read Aborted. Device Disabled :(");
 			#endif
 
 			break;

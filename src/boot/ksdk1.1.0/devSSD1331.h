@@ -48,4 +48,6 @@ int	devSSD1331clear(void);
 int	devSSD1331red(void);
 int	devSSD1331green(void);
 int	devSSD1331blue(void);
+int	devSSD1331arrow(int x, int y, int z);
+int	devSSD1331initarrow(void);
 
