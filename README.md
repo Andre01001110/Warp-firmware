@@ -133,6 +133,8 @@ By default is is configured to run indefinitely, but this can be changed to inst
 	displayArrow(0, true /* loopForever */, 500, 1);
 	warpPrint("\r\tDone.\n\n");
 ```
+The default orientation of the board is lying flat with the mini USB port on the top and at the far end. The screen should be oriented so that the negative x direction corresponds to a down (in the direction of gravity) force.
+
 ----
 
 This code was modified from the [Warp Firmware provided here](https://github.com/physical-computation/Warp-firmware) by Andre Nowaczek of Downing College, Cambridge. CRSid: an545. The majority of drivers were removed. devMMA8451Q and boot files were modifed. devSSD1331 files are entirely my own work.
