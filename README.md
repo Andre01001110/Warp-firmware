@@ -97,6 +97,43 @@ There are built-in programmes to change the colour of the screen to Red, Green, 
 
 If you see repeated characters, you can set your terminal to not echo typed characters using `stty -echo`.
 
+## 5.  Using the Force Visualiser
+The force visualiser can be actiavted with option `a` in the OLED Menu:
+```
+	Select:
+	- '0' Clear Screen
+	- 'a' Enable Arrow
+	- 'r' Red Rectangle
+	- 'g' Green Rectangle
+	- 'b' Blue Rectangle
+	- 'y' Initialise OLED
+	Enter selection> 
+```
+By default is is configured to run indefinitely, but this can be changed to instead allow the user to select a variety of parameters before the programme begins running. The relevant section of the boot.c file is below. Uncommenting all the commented regions and then commenting the currently active displayArrow() call will enable this functionality.
+```
+	/*
+	bool		outputFlag;
+    
+	warpPrint("\r\n\tOutput Readings? ('y' or 'n')> ");
+	key = warpWaitKey();
+	outputFlag = (key == 'y' ? 1 : 0);
+
+    	warpPrint("\r\n\tNumber of readings? (e.g., '1234')> ");
+	uint16_t	loopLength = read4digits();
+
+	warpPrint("\r\n\tSet the time delay between each run in milliseconds (e.g., '1234')> ");
+	uint16_t	menuDelayBetweenEachRun = read4digits();
+	*/
+
+
+	warpPrint("\r\n\tEnabling Arrow...\n");
+	//displayArrow(menuDelayBetweenEachRun, false /* loopForever */, loopLength, outputFlag);
+	displayArrow(0, true /* loopForever */, 500, 1);
+	warpPrint("\r\tDone.\n\n");
+```
+----
+This code was modified from the [Warp Firmware provided here](https://github.com/physical-computation/Warp-firmware) by Andre Nowaczek of Downing College, Cambridge. CRSid: an545.
+
 ----
 
 ## Warp Acknowledgements
