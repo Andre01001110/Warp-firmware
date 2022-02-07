@@ -82,7 +82,7 @@ By default on Unix, you will likely see characters you enter shown twice. To avo
 - Execute `stty -echo` at the command line in the terminal window in which you will run the `JLinkRTTClient`.
 
 ### Introduction to using the menu and testing the OLED
-The menu contains all the functions you need for the device to work out of the box. Of particular note is the OLED Menu, which can be accessed with the `y` key. You should fine the following menu.
+The menu contains all the functions you need for the device to work out of the box. Of particular note is the OLED Menu, which can be accessed with the `y` key. You should find the following menu.
 ```
 	Select:
 	- '0' Clear Screen
